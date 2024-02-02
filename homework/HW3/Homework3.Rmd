@@ -1,0 +1,181 @@
+---
+title: 'STA 5207: Homework 3'
+date: 'Due: Friday, February 2 by 11:59 PM'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Include your R code in an R chunks as part of your answer. In addition, your written answer to each exercise should be self-contained so that the grader can determine your solution without reading your code or deciphering its output
+
+## Exercise 1 (Using `lm`) [35 Points]
+
+For this exercise we will use the data stored in `properties.csv` on Canvas. This data was collected by a commercial real estate company to evaluate vacancy rates, rental rates, and operating expenses for commercial properties in a large metropolitan area in order to provide clients with quantitative information upon which to make rental decisions. The data is taken from 81 properties. The variables in the data set are
+
+-   `rental_rate`: rental rate of the property as a percentage.
+-   `age`: age of the property in years.
+-   `tax_rate`: the property's tax rate.
+-   `vacancy_rate`: the property's vacancy rate as a proportion.
+-   `cost`: operating cost in dollars.
+
+1.  (5 points) Fit the following multiple linear regression model. Use `rental_rate` as the response and `age`, `tax_rate`, `vacancy_rate`, and `cost` as the predictors.
+
+    $$
+    Y_i = \beta_0 + \beta_1 x_{i1} + \beta_2 x_{i2} + \beta_{3} x_{i3} + \beta_4 x_{i4} + \varepsilon_i.
+    $$
+
+    Here,
+
+    -   $Y_i$ is `rental_rate` .
+    -   $x_{i1}$ is `age`.
+    -   $x_{i2}$ is `tax_rate`.
+    -   $x_{i3}$ is `vacancy_rate`.
+    -   $x_{i4}$ is `cost`.
+
+    Use an $F$-test to test the significance of the regression. Report the following:
+
+    -   The null and alternative hypotheses.
+
+    -   The value of the test statistic.
+
+    -   The $p$-value of the test.
+
+    -   A statistical decision at $\alpha = 0.01$.
+
+    -   A conclusion in the context of the problem.
+
+        ```{r}
+        prop = read.csv("properties.csv")
+        model = lm(rental_rate ~ age +tax_rate + vacancy_rate + cost, data = prop)
+        summary(model)
+        ```
+
+    Null Hypothesis: $\beta_1$ = $\beta_2$ = $\beta_3$ = $\beta_4$ = 0
+
+    Alternative Hypothesis: At least one of the $\beta_i$'s are not zero.
+
+    The test statistic: 26.76
+
+    The $p$-value is: $7.27e^{-14}$
+
+2.  (4 points) Give the interpretation of $\beta_4$ in the context of the problem.
+
+    When the operating cost increases by \$1, and the other predictors are kept the same, the mean rental rate increases by $\beta_4$%
+
+3.  (8 points) Give the estimated regression equation using all 4 predictors. Give the interpretation of $\hat{\beta}_1$ in the context of the problem.
+
+    $$
+    rental\_rate = 12.2 -.142x_{i1} + .282x_{i2} + .6193x_{i3} + 7.924e^{-06}x_{i4}.
+    $$
+
+    When age increases by 1 year, and all other predictors are kept the same. The mean change in rental year decreases by .142%.
+
+4.  (5 points) Conduct a $t$-test at the 5% significance level for $\beta_3$. Give the hypotheses, test statistic, $p$-value, statistical decision, and conclusion in the context of the problem.
+
+5.  (3 points) Report the value of $R^2$ for the model. Interpret its meaning in the context of the problem.
+
+6.  (5 points) Report the 90% confidence interval for $\beta_1$. Give an interpretation of the interval in the context of the problem.
+
+7.  (5 points) Use a 99% confidence interval to estimate the mean rental rate of 5 year old properties with a 4.1 tax rate, 0.16 vacancy rate, and an operating cost of \$100,000.
+
+8.  (5 points) Give a 99% prediction interval for a single property with the predictor values given in part (7).
+
+## Exercise 2 (The $F$-test vs. The $t$-test) [35 Points]
+
+For this exercise we will use the `sat` data set from the `faraway` package. To load the data set in `R`, run `data(sat, package='faraway')`. You can also find the data in `sat.csv` on Canvas. The data was collected to study the relationship between expenditures on public education and test results during the 1994 - 1995 school year. The data set contains the following predictors:
+
+-   `expend`: Current expenditure per pupil (in thousands of dollars).
+-   `ratio`: Average pupil to teacher ratio.
+-   `salary`: Estimated average annual salary of teachers.
+-   `takers`: Percentage of eligible students taking the SAT.
+-   `verbal` Average verbal SAT score.
+-   `math`: Average math SAT score.
+-   `total`: Average total score on the SAT.
+
+1.  (8 points) Fit the following multiple linear regression model. Use `total` as the response and `expend`, `salary`, and `ratio` as predictors.
+
+    $$
+    Y_i = \beta_0 + \beta_1 x_{i1} + \beta_2 x_{i2} + \beta_3 x_{i3} + \varepsilon_i
+    $$
+
+    Here,
+
+    -   $Y_i$ is `total`.
+    -   $x_{i1}$ is `expend`.
+    -   $x_{i2}$ is `salary`.
+    -   $x_{i3}$ is `ratio`.
+
+    Use an $F$-test to test the significance of the regression. Report the following:
+
+    -   The null and alternative hypotheses.
+    -   The value of the test statistic.
+    -   The $p$-value of the test.
+    -   A statistical decision at $\alpha = 0.05$.
+    -   A conclusion in the context of the problem.
+
+2.  (12 points) Conduct a $t$-test at the 5% significance level for each slope parameter ($\beta_1, \beta_2, \beta_2$). Give the hypotheses, test statistics, $p$-values, statistical decision, and conclusions in the context of the problem for each test.
+
+3.  (3 points) Based on your answers to questions 1 and 2, do any of these predictors have a linear relationship with the response?
+
+4.  (12 points) Perform **simple** **linear regression** with `total` as the response and
+
+    -   `expend` as the predictor. Conduct a $t$-test at the 5% significance level. Give the test statistic, $p$-value, and statistical decision. Does the conclusion (reject or not) match the result of the test in question 2?
+
+    -   `salary` as the predictor. Conduct a $t$-test at the 5% significance level. Give the test statistic, $p$-value, and statistical decision. Does the conclusion (reject or not) match the result of the test in question 2?
+
+    -   `ratio` as the predictor. Conduct a $t$-test at the 5% significance level. Give the test statistic, $p$-value, and statistical decision. Does the conclusion (reject or not) match the result of the test in question 2?
+
+## Exercise 3 (The $F$-test for Model Comparison) [30 Points]
+
+For this exercise we will use data stored in `goalies_subset.csv` on Canvas. This data is a subset of the `goalies.csv` data set you analyzed in Homework 1. It contains career data for 462 players in the National Hockey League who played goaltender at some point up to and including the 2014-2015 season. The variables in the data set are:
+
+-   `W`: Wins
+-   `GA`: Goals Against
+-   `SA`: Shots Against
+-   `SV`: Saves
+-   `SV_PCT`: Save Percentages
+-   `GAA`: Goals Against Average
+-   `SO`: Shutouts
+-   `MIN`: Minutes
+-   `PIM`: Penalties in Minutes
+
+For this exercise, we will consider three models, each with Wins as the response. The predictors for these models are
+
+-   **Model 1:** Goals Against, Saves
+-   **Model 2**: Goals Against, Saves, Shots Against, Minutes, Shutouts
+-   **Model 3**: All Predictors.
+
+1.  (10 points) Use an $F$-test to compare Model 1 and Model 2. Report the following:
+    -   The null hypothesis.
+
+    -   $\mathsf{SSE_F}$, $\mathsf{SSE_R}$, and their associated degrees of freedom.
+
+    -   The value of the test statistic. Also show how the test statistic is computed using the sum of squared errors numerically.
+
+    -   The $p$-value of the test.
+
+    -   A statistical decision at $\alpha = 0.05$.
+
+    -   The model you prefer.
+2.  (10 points) Use an $F$-test to compare Model 3 to your preferred model from part (1). Report the following:
+    -   The null hypothesis.
+
+    -   $\mathsf{SSE_F}$, $\mathsf{SSE_R}$, and their associated degrees of freedom.
+
+    -   The value of the test statistic. Also show how the test statistic is computed using the sum of squared errors numerically.
+
+    -   The $p$-value of the test.
+
+    -   A statistical decision at $\alpha = 0.05$.
+
+    -   The model you prefer.
+3.  (10 points) Use a $t$-test to test $H_0: \beta_{\texttt{SV}} = 0$ vs $H_1 : \beta_{\texttt{SV}} \neq 0$ for the model you preferred in part (2). Report the following:
+    -   The value of the test statistic.
+
+    -   The $p$-value of the test.
+
+    -   A statistical decision at $\alpha = 0.05$.
