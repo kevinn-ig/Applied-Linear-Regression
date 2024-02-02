@@ -2,6 +2,7 @@
 title: 'STA 5207: Homework 3'
 date: 'Due: Friday, February 2 by 11:59 PM'
 output:
+  pdf_document: default
   html_document:
     df_print: paged
 ---
@@ -62,6 +63,8 @@ For this exercise we will use the data stored in `properties.csv` on Canvas. Thi
 
     The $p$-value is: $7.27e^{-14}$
 
+    Conclusion: We reject the null hypothesis. We conclude at least one of the $\beta_i$'s have a significant linear relationship with rental rate.
+
 2.  (4 points) Give the interpretation of $\beta_4$ in the context of the problem.
 
     When the operating cost increases by \$1, and the other predictors are kept the same, the mean rental rate increases by $\beta_4$%
@@ -76,13 +79,40 @@ For this exercise we will use the data stored in `properties.csv` on Canvas. Thi
 
 4.  (5 points) Conduct a $t$-test at the 5% significance level for $\beta_3$. Give the hypotheses, test statistic, $p$-value, statistical decision, and conclusion in the context of the problem.
 
+    Null Hypothesis :$\beta_3$ = 0
+
+    Alternative Hypothesis : $\beta_3$ $\neq$ 0
+
+    Test Statistic: .570
+
+    The $p$-value is: .57
+
+    We do not reject the null hypothesis. We conclude that $\beta_3$ does not have a significant linear relationship with rental rate.
+
 5.  (3 points) Report the value of $R^2$ for the model. Interpret its meaning in the context of the problem.
+
+    $R^2$ = .5847. This means that 58.47% of the observed variability in rental rate can be excplained by the linear relationship with the predictors $\beta_i$'s.
 
 6.  (5 points) Report the 90% confidence interval for $\beta_1$. Give an interpretation of the interval in the context of the problem.
 
+    ```{r}
+    confint(model, par = "age", level = .90)
+    ```
+
+    The 90% confidence interval for $\beta_1$ is (-.178, -.107)
+
+    We are 90% confident that when the age of a property increases by 1 year, and the other predictors remain the same, the average decrease in mean rental rate will be between .178 and .107 percent.
+
 7.  (5 points) Use a 99% confidence interval to estimate the mean rental rate of 5 year old properties with a 4.1 tax rate, 0.16 vacancy rate, and an operating cost of \$100,000.
 
+    ```{r}
+    new_data = data.frame(age = 5, tax_rate = 4.1, vacancy_rate = .16, cost = 100000)
+    predict(model, newdata = new_data, interval = "confidence", level = .99)
+    ```
+
 8.  (5 points) Give a 99% prediction interval for a single property with the predictor values given in part (7).
+
+    The 99% confidence interval for the mean rental rate of 5 year old properties with a 4.1 tax rate, 0.16 vacancy rate, and an operating cost of \$100,000 is (12.70, 14.37).
 
 ## Exercise 2 (The $F$-test vs. The $t$-test) [35 Points]
 
@@ -112,22 +142,120 @@ For this exercise we will use the `sat` data set from the `faraway` package. To 
     Use an $F$-test to test the significance of the regression. Report the following:
 
     -   The null and alternative hypotheses.
+
     -   The value of the test statistic.
+
     -   The $p$-value of the test.
+
     -   A statistical decision at $\alpha = 0.05$.
+
     -   A conclusion in the context of the problem.
+
+        ```{r}
+        library(faraway)
+        data("sat")
+        model = lm(total ~ expend + salary + ratio, data = sat)
+        summary(model)
+        ```
+
+    Null Hypothesis: $\beta_1 = \beta_2 = \beta_3 = 0$
+
+    Alternative hypothesis: At least one of the $\beta_i$ is not zero.
+
+    Test statistic: 4.066
+
+    $p$-value: .0121
+
+    We reject the null hypothesis. We conclude at least one of the $\beta_i$'s have a significant linear relationship with total score.
 
 2.  (12 points) Conduct a $t$-test at the 5% significance level for each slope parameter ($\beta_1, \beta_2, \beta_2$). Give the hypotheses, test statistics, $p$-values, statistical decision, and conclusions in the context of the problem for each test.
 
+    -   For $\beta_1$ (expend):
+
+        -   Null hypothesis: $\beta_1 = 0$
+
+        -   Alternative hypothesis: $\beta_1 \neq 0$
+
+        -   Test statistic: .747
+
+        -   $p$-value: .4589
+
+        -   We do not reject the null. There is not enough evidence to suggest $\beta_1$ has a significant linear relationship with total score.
+
+    -   For $\beta_2$ (salary):
+
+        -   Null hypothesis: $\beta_2 = 0$
+
+        -   Alternative hypothesis: $\beta_2 \neq 0$
+
+        -   Test statistic: -1.88
+
+        -   $p$-value: .07
+
+        -   We do not reject the null. There is not enough evidence to suggest $\beta_2$ has a significant linear relationship with total score.
+
+    -   For $\beta_3$ (ratio):
+
+        -   Null hypothesis: $\beta_3 = 0$
+
+        -   Alternative hypothesis: $\beta_3 \neq 0$
+
+        -   Test statistic: .968
+
+        -   $p$-value: .3383
+
+        -   We do not reject the null. There is not enough evidence to suggest $\beta_3$ has a significant linear relationship with total score.
+
 3.  (3 points) Based on your answers to questions 1 and 2, do any of these predictors have a linear relationship with the response?
+
+    The overall model suggests that there is at least one predictor which has a linear relationship with the response. But after performing the individual t-tests, it is apparent that this is not true. The only one that may have a significant linear relationship is salary as it is the closest to $\alpha$.
 
 4.  (12 points) Perform **simple** **linear regression** with `total` as the response and
 
     -   `expend` as the predictor. Conduct a $t$-test at the 5% significance level. Give the test statistic, $p$-value, and statistical decision. Does the conclusion (reject or not) match the result of the test in question 2?
 
+        ```{r}
+        model = lm(total ~ expend, data = sat)
+        summary(model)$coefficients
+        ```
+
+        -   Test statistic: -2.85
+
+        -   $p$-value: $6.41 \times 10^{-3}$
+
+        -   We do reject the null. There is a significant linear relationship between total and expenditure.
+
+        -   This does not match the result for question 2.
+
     -   `salary` as the predictor. Conduct a $t$-test at the 5% significance level. Give the test statistic, $p$-value, and statistical decision. Does the conclusion (reject or not) match the result of the test in question 2?
 
+        ```{r}
+        model = lm(total ~ salary, data = sat)
+        summary(model)$coefficients
+        ```
+
+        -   Test statistic: -3.39
+
+        -   $p$-value: $1.39 \times 10^{-3}$
+
+        -   We do reject the null. There is a significant linear relationship between total and salary.
+
+        -   This does not match the result for question 2.
+
     -   `ratio` as the predictor. Conduct a $t$-test at the 5% significance level. Give the test statistic, $p$-value, and statistical decision. Does the conclusion (reject or not) match the result of the test in question 2?
+
+        ```{r}
+        model = lm(total ~ ratio, data = sat)
+        summary(model)$coefficients
+        ```
+
+        -   Test statistic: .565
+
+        -   $p$-value: $5.75 \times 10^{-1}$
+
+        -   We do not reject the null. There is no evidence that there is a significant linear relationship between total and ratio.
+
+        -   This does match the result for question 2.
 
 ## Exercise 3 (The $F$-test for Model Comparison) [30 Points]
 
@@ -146,36 +274,93 @@ For this exercise we will use data stored in `goalies_subset.csv` on Canvas. Thi
 For this exercise, we will consider three models, each with Wins as the response. The predictors for these models are
 
 -   **Model 1:** Goals Against, Saves
+
 -   **Model 2**: Goals Against, Saves, Shots Against, Minutes, Shutouts
+
 -   **Model 3**: All Predictors.
+
+    ```{r}
+    goal = read.csv("goalies_subset.csv")
+    model1 = lm(W ~ GA + SV, data = goal)
+    model2 = lm(W ~ GA + SV + SA + MIN + SO, data = goal)
+    model3 = lm(W ~ ., data = goal)
+    ```
 
 1.  (10 points) Use an $F$-test to compare Model 1 and Model 2. Report the following:
     -   The null hypothesis.
 
+        $\beta_1 = \beta_2 = 0$
+
     -   $\mathsf{SSE_F}$, $\mathsf{SSE_R}$, and their associated degrees of freedom.
+
+        ```{r}
+        anova(model1, model2)
+        ```
+
+        $SSE_R$ = 294756.59 with 459 degrees of freedom.
+
+        $SSE_F$ = 72898.59 with 456 degrees of freedom
 
     -   The value of the test statistic. Also show how the test statistic is computed using the sum of squared errors numerically.
 
+        $$
+        F = \frac{\frac{294756.59 - 72898.59}{459-456}}{\frac{72898.59}{456}} = 462.59
+        $$
+
     -   The $p$-value of the test.
+
+        $p$-value: $6.808 \times 10^{-138}$
 
     -   A statistical decision at $\alpha = 0.05$.
 
+        We reject the null hypothesis. At least one of $\beta_1$, $\beta_2$ has a significant linear relationship with wins, given the other predictors are in the model.
+
     -   The model you prefer.
+
+        We prefer model 2.
 2.  (10 points) Use an $F$-test to compare Model 3 to your preferred model from part (1). Report the following:
     -   The null hypothesis.
 
+        -   $\beta_1 = \beta_2 = \beta_3 = \beta_4 = \beta_5  = 0$
+
     -   $\mathsf{SSE_F}$, $\mathsf{SSE_R}$, and their associated degrees of freedom.
+
+        ```{r}
+        anova(model2, model3)
+        ```
+
+        $SSE_R$ = 72898.59 with 456 degrees of freedom.
+
+        $SSE_F$ = 70993.54 with 453 degrees of freedom
 
     -   The value of the test statistic. Also show how the test statistic is computed using the sum of squared errors numerically.
 
+        $F = \frac{\frac{72898.59 - 70993.54}{456-453}}{\frac{70993.54}{453}} = 4.052$
+
     -   The $p$-value of the test.
+
+        -   $p$-value: .00735
 
     -   A statistical decision at $\alpha = 0.05$.
 
+        We reject the null hypothesis. At least one of $\beta_1$, $\beta_2$ , $\beta_3$, $\beta_4$, $\beta_5$ has a significant linear relationship with wins, given the other predictors are in the model.
+
     -   The model you prefer.
+
+        We prefer model 3.
 3.  (10 points) Use a $t$-test to test $H_0: \beta_{\texttt{SV}} = 0$ vs $H_1 : \beta_{\texttt{SV}} \neq 0$ for the model you preferred in part (2). Report the following:
     -   The value of the test statistic.
 
+        ```{r}
+        summary(model3)$coefficients
+        ```
+
+        Test Statistic: -3.86
+
     -   The $p$-value of the test.
 
+        $p$-value: $1.31 \times 10^{-4}$
+
     -   A statistical decision at $\alpha = 0.05$.
+
+        We reject the null hypothesis. We conclude that there is a linear relationship between saves and wins.

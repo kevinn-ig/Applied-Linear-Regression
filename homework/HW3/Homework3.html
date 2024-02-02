@@ -1708,7 +1708,10 @@ summary(model)</code></pre>
 <p>Null Hypothesis: <span class="math inline">\(\beta_1\)</span> = <span class="math inline">\(\beta_2\)</span> = <span class="math inline">\(\beta_3\)</span> = <span class="math inline">\(\beta_4\)</span> = 0</p>
 <p>Alternative Hypothesis: At least one of the <span class="math inline">\(\beta_i\)</span>’s are not zero.</p>
 <p>The test statistic: 26.76</p>
-<p>The <span class="math inline">\(p\)</span>-value is: <span class="math inline">\(7.27e^{-14}\)</span></p></li>
+<p>The <span class="math inline">\(p\)</span>-value is: <span class="math inline">\(7.27e^{-14}\)</span></p>
+<p>Conclusion: We reject the null hypothesis. We conclude at least one
+of the <span class="math inline">\(\beta_i\)</span>’s have a significant
+linear relationship with rental rate.</p></li>
 <li><p>(4 points) Give the interpretation of <span class="math inline">\(\beta_4\)</span> in the context of the
 problem.</p>
 <p>When the operating cost increases by $1, and the other predictors are
@@ -1725,16 +1728,40 @@ same. The mean change in rental year decreases by .142%.</p></li>
 <li><p>(5 points) Conduct a <span class="math inline">\(t\)</span>-test
 at the 5% significance level for <span class="math inline">\(\beta_3\)</span>. Give the hypotheses, test
 statistic, <span class="math inline">\(p\)</span>-value, statistical
-decision, and conclusion in the context of the problem.</p></li>
+decision, and conclusion in the context of the problem.</p>
+<p>Null Hypothesis :<span class="math inline">\(\beta_3\)</span> = 0</p>
+<p>Alternative Hypothesis : <span class="math inline">\(\beta_3\)</span>
+<span class="math inline">\(\neq\)</span> 0</p>
+<p>Test Statistic: .570</p>
+<p>The <span class="math inline">\(p\)</span>-value is: .57</p>
+<p>We do not reject the null hypothesis. We conclude that <span class="math inline">\(\beta_3\)</span> does not have a significant
+linear relationship with rental rate.</p></li>
 <li><p>(3 points) Report the value of <span class="math inline">\(R^2\)</span> for the model. Interpret its meaning
-in the context of the problem.</p></li>
+in the context of the problem.</p>
+<p><span class="math inline">\(R^2\)</span> = .5847. This means that
+58.47% of the observed variability in rental rate can be excplained by
+the linear relationship with the predictors <span class="math inline">\(\beta_i\)</span>’s.</p></li>
 <li><p>(5 points) Report the 90% confidence interval for <span class="math inline">\(\beta_1\)</span>. Give an interpretation of the
-interval in the context of the problem.</p></li>
+interval in the context of the problem.</p>
+<pre class="r"><code>confint(model, par = &quot;age&quot;, level = .90)</code></pre>
+<pre><code>##            5 %      95 %
+## age -0.1775723 -0.106495</code></pre>
+<p>The 90% confidence interval for <span class="math inline">\(\beta_1\)</span> is (-.178, -.107)</p>
+<p>We are 90% confident that when the age of a property increases by 1
+year, and the other predictors remain the same, the average decrease in
+mean rental rate will be between .178 and .107 percent.</p></li>
 <li><p>(5 points) Use a 99% confidence interval to estimate the mean
 rental rate of 5 year old properties with a 4.1 tax rate, 0.16 vacancy
-rate, and an operating cost of $100,000.</p></li>
+rate, and an operating cost of $100,000.</p>
+<pre class="r"><code>new_data = data.frame(age = 5, tax_rate = 4.1, vacancy_rate = .16, cost = 100000)
+predict(model, newdata = new_data, interval = &quot;confidence&quot;, level = .99)</code></pre>
+<pre><code>##        fit      lwr      upr
+## 1 13.53821 12.70681 14.36961</code></pre></li>
 <li><p>(5 points) Give a 99% prediction interval for a single property
-with the predictor values given in part (7).</p></li>
+with the predictor values given in part (7).</p>
+<p>The 99% confidence interval for the mean rental rate of 5 year old
+properties with a 4.1 tax rate, 0.16 vacancy rate, and an operating cost
+of $100,000 is (12.70, 14.37).</p></li>
 </ol>
 </div>
 <div id="exercise-2-the-f-test-vs.-the-t-test-35-points" class="section level2">
@@ -1780,34 +1807,145 @@ Y_i = \beta_0 + \beta_1 x_{i1} + \beta_2 x_{i2} + \beta_3 x_{i3} +
 <p>Use an <span class="math inline">\(F\)</span>-test to test the
 significance of the regression. Report the following:</p>
 <ul>
-<li>The null and alternative hypotheses.</li>
-<li>The value of the test statistic.</li>
-<li>The <span class="math inline">\(p\)</span>-value of the test.</li>
-<li>A statistical decision at <span class="math inline">\(\alpha =
-0.05\)</span>.</li>
-<li>A conclusion in the context of the problem.</li>
-</ul></li>
+<li><p>The null and alternative hypotheses.</p></li>
+<li><p>The value of the test statistic.</p></li>
+<li><p>The <span class="math inline">\(p\)</span>-value of the
+test.</p></li>
+<li><p>A statistical decision at <span class="math inline">\(\alpha =
+0.05\)</span>.</p></li>
+<li><p>A conclusion in the context of the problem.</p>
+<pre class="r"><code>library(faraway)
+data(&quot;sat&quot;)
+model = lm(total ~ expend + salary + ratio, data = sat)
+summary(model)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = total ~ expend + salary + ratio, data = sat)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -140.911  -46.740   -7.535   47.966  123.329 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 1069.234    110.925   9.639 1.29e-12 ***
+## expend        16.469     22.050   0.747   0.4589    
+## salary        -8.823      4.697  -1.878   0.0667 .  
+## ratio          6.330      6.542   0.968   0.3383    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 68.65 on 46 degrees of freedom
+## Multiple R-squared:  0.2096, Adjusted R-squared:  0.1581 
+## F-statistic: 4.066 on 3 and 46 DF,  p-value: 0.01209</code></pre></li>
+</ul>
+<p>Null Hypothesis: <span class="math inline">\(\beta_1 = \beta_2 =
+\beta_3 = 0\)</span></p>
+<p>Alternative hypothesis: At least one of the <span class="math inline">\(\beta_i\)</span> is not zero.</p>
+<p>Test statistic: 4.066</p>
+<p><span class="math inline">\(p\)</span>-value: .0121</p>
+<p>We reject the null hypothesis. We conclude at least one of the <span class="math inline">\(\beta_i\)</span>’s have a significant linear
+relationship with total score.</p></li>
 <li><p>(12 points) Conduct a <span class="math inline">\(t\)</span>-test
 at the 5% significance level for each slope parameter (<span class="math inline">\(\beta_1, \beta_2, \beta_2\)</span>). Give the
 hypotheses, test statistics, <span class="math inline">\(p\)</span>-values, statistical decision, and
-conclusions in the context of the problem for each test.</p></li>
+conclusions in the context of the problem for each test.</p>
+<ul>
+<li><p>For <span class="math inline">\(\beta_1\)</span> (expend):</p>
+<ul>
+<li><p>Null hypothesis: <span class="math inline">\(\beta_1 =
+0\)</span></p></li>
+<li><p>Alternative hypothesis: <span class="math inline">\(\beta_1 \neq
+0\)</span></p></li>
+<li><p>Test statistic: .747</p></li>
+<li><p><span class="math inline">\(p\)</span>-value: .4589</p></li>
+<li><p>We do not reject the null. There is not enough evidence to
+suggest <span class="math inline">\(\beta_1\)</span> has a significant
+linear relationship with total score.</p></li>
+</ul></li>
+<li><p>For <span class="math inline">\(\beta_2\)</span> (salary):</p>
+<ul>
+<li><p>Null hypothesis: <span class="math inline">\(\beta_2 =
+0\)</span></p></li>
+<li><p>Alternative hypothesis: <span class="math inline">\(\beta_2 \neq
+0\)</span></p></li>
+<li><p>Test statistic: -1.88</p></li>
+<li><p><span class="math inline">\(p\)</span>-value: .07</p></li>
+<li><p>We do not reject the null. There is not enough evidence to
+suggest <span class="math inline">\(\beta_2\)</span> has a significant
+linear relationship with total score.</p></li>
+</ul></li>
+<li><p>For <span class="math inline">\(\beta_3\)</span> (ratio):</p>
+<ul>
+<li><p>Null hypothesis: <span class="math inline">\(\beta_3 =
+0\)</span></p></li>
+<li><p>Alternative hypothesis: <span class="math inline">\(\beta_3 \neq
+0\)</span></p></li>
+<li><p>Test statistic: .968</p></li>
+<li><p><span class="math inline">\(p\)</span>-value: .3383</p></li>
+<li><p>We do not reject the null. There is not enough evidence to
+suggest <span class="math inline">\(\beta_3\)</span> has a significant
+linear relationship with total score.</p></li>
+</ul></li>
+</ul></li>
 <li><p>(3 points) Based on your answers to questions 1 and 2, do any of
-these predictors have a linear relationship with the response?</p></li>
+these predictors have a linear relationship with the response?</p>
+<p>The overall model suggests that there is at least one predictor which
+has a linear relationship with the response. But after performing the
+individual t-tests, it is apparent that this is not true. The only one
+that may have a significant linear relationship is salary as it is the
+closest to <span class="math inline">\(\alpha\)</span>.</p></li>
 <li><p>(12 points) Perform <strong>simple</strong> <strong>linear
 regression</strong> with <code>total</code> as the response and</p>
 <ul>
 <li><p><code>expend</code> as the predictor. Conduct a <span class="math inline">\(t\)</span>-test at the 5% significance level. Give
 the test statistic, <span class="math inline">\(p\)</span>-value, and
 statistical decision. Does the conclusion (reject or not) match the
-result of the test in question 2?</p></li>
+result of the test in question 2?</p>
+<pre class="r"><code>model = lm(total ~ expend, data = sat)
+summary(model)$coefficients</code></pre>
+<pre><code>##               Estimate Std. Error   t value     Pr(&gt;|t|)
+## (Intercept) 1089.29372  44.389950 24.539197 8.168276e-29
+## expend       -20.89217   7.328209 -2.850925 6.407965e-03</code></pre>
+<ul>
+<li><p>Test statistic: -2.85</p></li>
+<li><p><span class="math inline">\(p\)</span>-value: <span class="math inline">\(6.41 \times 10^{-3}\)</span></p></li>
+<li><p>We do reject the null. There is a significant linear relationship
+between total and expenditure.</p></li>
+<li><p>This does not match the result for question 2.</p></li>
+</ul></li>
 <li><p><code>salary</code> as the predictor. Conduct a <span class="math inline">\(t\)</span>-test at the 5% significance level. Give
 the test statistic, <span class="math inline">\(p\)</span>-value, and
 statistical decision. Does the conclusion (reject or not) match the
-result of the test in question 2?</p></li>
+result of the test in question 2?</p>
+<pre class="r"><code>model = lm(total ~ salary, data = sat)
+summary(model)$coefficients</code></pre>
+<pre><code>##                Estimate Std. Error   t value     Pr(&gt;|t|)
+## (Intercept) 1158.858797  57.659387 20.098354 5.130682e-25
+## salary        -5.539615   1.632391 -3.393558 1.391310e-03</code></pre>
+<ul>
+<li><p>Test statistic: -3.39</p></li>
+<li><p><span class="math inline">\(p\)</span>-value: <span class="math inline">\(1.39 \times 10^{-3}\)</span></p></li>
+<li><p>We do reject the null. There is a significant linear relationship
+between total and salary.</p></li>
+<li><p>This does not match the result for question 2.</p></li>
+</ul></li>
 <li><p><code>ratio</code> as the predictor. Conduct a <span class="math inline">\(t\)</span>-test at the 5% significance level. Give
 the test statistic, <span class="math inline">\(p\)</span>-value, and
 statistical decision. Does the conclusion (reject or not) match the
-result of the test in question 2?</p></li>
+result of the test in question 2?</p>
+<pre class="r"><code>model = lm(total ~ ratio, data = sat)
+summary(model)$coefficients</code></pre>
+<pre><code>##               Estimate Std. Error    t value     Pr(&gt;|t|)
+## (Intercept) 920.698712  80.770464 11.3989529 2.935089e-15
+## ratio         2.682482   4.749349  0.5648106 5.748329e-01</code></pre>
+<ul>
+<li><p>Test statistic: .565</p></li>
+<li><p><span class="math inline">\(p\)</span>-value: <span class="math inline">\(5.75 \times 10^{-1}\)</span></p></li>
+<li><p>We do not reject the null. There is no evidence that there is a
+significant linear relationship between total and ratio.</p></li>
+<li><p>This does match the result for question 2.</p></li>
+</ul></li>
 </ul></li>
 </ol>
 </div>
@@ -1834,51 +1972,110 @@ season. The variables in the data set are:</p>
 <p>For this exercise, we will consider three models, each with Wins as
 the response. The predictors for these models are</p>
 <ul>
-<li><strong>Model 1:</strong> Goals Against, Saves</li>
-<li><strong>Model 2</strong>: Goals Against, Saves, Shots Against,
-Minutes, Shutouts</li>
-<li><strong>Model 3</strong>: All Predictors.</li>
+<li><p><strong>Model 1:</strong> Goals Against, Saves</p></li>
+<li><p><strong>Model 2</strong>: Goals Against, Saves, Shots Against,
+Minutes, Shutouts</p></li>
+<li><p><strong>Model 3</strong>: All Predictors.</p>
+<pre class="r"><code>goal = read.csv(&quot;goalies_subset.csv&quot;)
+model1 = lm(W ~ GA + SV, data = goal)
+model2 = lm(W ~ GA + SV + SA + MIN + SO, data = goal)
+model3 = lm(W ~ ., data = goal)</code></pre></li>
 </ul>
 <ol style="list-style-type: decimal">
 <li>(10 points) Use an <span class="math inline">\(F\)</span>-test to
 compare Model 1 and Model 2. Report the following:
 <ul>
-<li><p>The null hypothesis.</p></li>
+<li><p>The null hypothesis.</p>
+<p><span class="math inline">\(\beta_1 = \beta_2 = 0\)</span></p></li>
 <li><p><span class="math inline">\(\mathsf{SSE_F}\)</span>, <span class="math inline">\(\mathsf{SSE_R}\)</span>, and their associated
-degrees of freedom.</p></li>
+degrees of freedom.</p>
+<pre class="r"><code>anova(model1, model2)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Res.Df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["RSS"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["Df"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["Sum of Sq"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["F"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["Pr(>F)"],"name":[6],"type":["dbl"],"align":["right"]}],"data":[{"1":"459","2":"294756.59","3":"NA","4":"NA","5":"NA","6":"NA","_rn_":"1"},{"1":"456","2":"72898.59","3":"3","4":"221858","5":"462.5935","6":"6.808247e-138","_rn_":"2"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<p><span class="math inline">\(SSE_R\)</span> = 294756.59 with 459
+degrees of freedom.</p>
+<p><span class="math inline">\(SSE_F\)</span> = 72898.59 with 456
+degrees of freedom</p></li>
 <li><p>The value of the test statistic. Also show how the test statistic
-is computed using the sum of squared errors numerically.</p></li>
-<li><p>The <span class="math inline">\(p\)</span>-value of the
-test.</p></li>
+is computed using the sum of squared errors numerically.</p>
+<p><span class="math display">\[
+F = \frac{\frac{294756.59 - 72898.59}{459-456}}{\frac{72898.59}{456}} =
+462.59
+\]</span></p></li>
+<li><p>The <span class="math inline">\(p\)</span>-value of the test.</p>
+<p><span class="math inline">\(p\)</span>-value: <span class="math inline">\(6.808 \times 10^{-138}\)</span></p></li>
 <li><p>A statistical decision at <span class="math inline">\(\alpha =
-0.05\)</span>.</p></li>
-<li><p>The model you prefer.</p></li>
+0.05\)</span>.</p>
+<p>We reject the null hypothesis. At least one of <span class="math inline">\(\beta_1\)</span>, <span class="math inline">\(\beta_2\)</span> has a significant linear
+relationship with wins, given the other predictors are in the
+model.</p></li>
+<li><p>The model you prefer.</p>
+<p>We prefer model 2.</p></li>
 </ul></li>
 <li>(10 points) Use an <span class="math inline">\(F\)</span>-test to
 compare Model 3 to your preferred model from part (1). Report the
 following:
 <ul>
-<li><p>The null hypothesis.</p></li>
+<li><p>The null hypothesis.</p>
+<ul>
+<li><span class="math inline">\(\beta_1 = \beta_2 = \beta_3 = \beta_4 =
+\beta_5 = 0\)</span></li>
+</ul></li>
 <li><p><span class="math inline">\(\mathsf{SSE_F}\)</span>, <span class="math inline">\(\mathsf{SSE_R}\)</span>, and their associated
-degrees of freedom.</p></li>
+degrees of freedom.</p>
+<pre class="r"><code>anova(model2, model3)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Res.Df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["RSS"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["Df"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["Sum of Sq"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["F"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["Pr(>F)"],"name":[6],"type":["dbl"],"align":["right"]}],"data":[{"1":"456","2":"72898.59","3":"NA","4":"NA","5":"NA","6":"NA","_rn_":"1"},{"1":"453","2":"70993.54","3":"3","4":"1905.056","5":"4.051968","6":"0.007352855","_rn_":"2"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<p><span class="math inline">\(SSE_R\)</span> = 72898.59 with 456
+degrees of freedom.</p>
+<p><span class="math inline">\(SSE_F\)</span> = 70993.54 with 453
+degrees of freedom</p></li>
 <li><p>The value of the test statistic. Also show how the test statistic
-is computed using the sum of squared errors numerically.</p></li>
-<li><p>The <span class="math inline">\(p\)</span>-value of the
-test.</p></li>
+is computed using the sum of squared errors numerically.</p>
+<p><span class="math inline">\(F = \frac{\frac{72898.59 -
+70993.54}{456-453}}{\frac{70993.54}{453}} = 4.052\)</span></p></li>
+<li><p>The <span class="math inline">\(p\)</span>-value of the test.</p>
+<ul>
+<li><span class="math inline">\(p\)</span>-value: .00735</li>
+</ul></li>
 <li><p>A statistical decision at <span class="math inline">\(\alpha =
-0.05\)</span>.</p></li>
-<li><p>The model you prefer.</p></li>
+0.05\)</span>.</p>
+<p>We reject the null hypothesis. At least one of <span class="math inline">\(\beta_1\)</span>, <span class="math inline">\(\beta_2\)</span> , <span class="math inline">\(\beta_3\)</span>, <span class="math inline">\(\beta_4\)</span>, <span class="math inline">\(\beta_5\)</span> has a significant linear
+relationship with wins, given the other predictors are in the
+model.</p></li>
+<li><p>The model you prefer.</p>
+<p>We prefer model 3.</p></li>
 </ul></li>
 <li>(10 points) Use a <span class="math inline">\(t\)</span>-test to
 test <span class="math inline">\(H_0: \beta_{\texttt{SV}} = 0\)</span>
 vs <span class="math inline">\(H_1 : \beta_{\texttt{SV}} \neq 0\)</span>
 for the model you preferred in part (2). Report the following:
 <ul>
-<li><p>The value of the test statistic.</p></li>
-<li><p>The <span class="math inline">\(p\)</span>-value of the
-test.</p></li>
+<li><p>The value of the test statistic.</p>
+<pre class="r"><code>summary(model3)$coefficients</code></pre>
+<pre><code>##                Estimate   Std. Error    t value     Pr(&gt;|t|)
+## (Intercept)  5.26516186 1.681814e+01  0.3130644 7.543758e-01
+## GA          -0.11328049 1.480846e-02 -7.6497158 1.220540e-13
+## SA           0.05163855 1.355654e-02  3.8091256 1.586887e-04
+## SV          -0.05821512 1.509048e-02 -3.8577392 1.310371e-04
+## SV_PCT      -8.04751912 1.766002e+01 -0.4556915 6.488302e-01
+## GAA         -0.04960055 4.821957e-01 -0.1028640 9.181165e-01
+## SO           0.45993589 1.989567e-01  2.3117387 2.123986e-02
+## MIN          0.01317900 9.503583e-04 13.8674046 1.068552e-36
+## PIM          0.04684216 1.363733e-02  3.4348486 6.474527e-04</code></pre>
+<p>Test Statistic: -3.86</p></li>
+<li><p>The <span class="math inline">\(p\)</span>-value of the test.</p>
+<p><span class="math inline">\(p\)</span>-value: <span class="math inline">\(1.31 \times 10^{-4}\)</span></p></li>
 <li><p>A statistical decision at <span class="math inline">\(\alpha =
-0.05\)</span>.</p></li>
+0.05\)</span>.</p>
+<p>We reject the null hypothesis. We conclude that there is a linear
+relationship between saves and wins.</p></li>
 </ul></li>
 </ol>
 </div>
