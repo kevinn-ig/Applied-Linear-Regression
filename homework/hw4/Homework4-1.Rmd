@@ -2,9 +2,9 @@
 title: 'STA 5207: Homework 4'
 date: 'Due: Friday, February 9 by 11:59 PM'
 output:
-  pdf_document: default
   html_document:
     df_print: paged
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -36,22 +36,24 @@ In this exercise, we will determine if there is a statistically significant *ave
     str(data)
     ```
 
+    The reference level of grp is control.
+
 2.  (2 points) Using the plotting functions discussed in class, make a scatter plot of `faft` versus `fbef` . Use a different color point and shape for each level of `grp`. Also be sure to label the axes appropriately and include a legend. Based on the scatter plot, does the linear relationship between `faft` and `fbef` seem to differ between treatment groups? Briefly explain.
 
     ```{r}
 
-    # Define colors and shapes for each group
-    colors <- c('treat' = 'red', 'control' = 'blue')
-    shapes <- c('treat' = 16, 'control' = 17)
+    plot_colors = c("Darkorange", "Darkgrey")
 
-    # Create the scatter plot
-    plot(data$fbef, data$faft, col = colors[data$grp], pch = shapes[data$grp], 
-         xlab = "fbef", ylab = "faft", main = "Scatter plot of faft versus fbef by treatment groups")
+    plot(faft ~ fbef, data = data, 
+         col = plot_colors[grp],  pch = as.numeric(grp),
+         xlab = "fbef", ylab = "faft")
 
     # Add legend
     legend("topright", legend = levels(factor(data$grp)), 
-           col = unique(colors), pch = unique(shapes))
+           col = unique(plot_colors), pch = as.numeric(data$grp))
     ```
+
+    It does seem like the linear relationship between fbef and faft differ between treatment groups. The line for treat seems to be slightly higher, indicating a higher intercept. There is no easily observable difference between the slope.
 
 3.  (4 points) Fit a simple linear regression model with `faft` as the response and `fbef` as the predictor. Give the estimated regression equation.
 
@@ -60,29 +62,53 @@ In this exercise, we will determine if there is a statistically significant *ave
     summary(model)$coefficients
     ```
 
+    $$
+    faft = 19.732 + .872(fbef)
+    $$
+
 4.  (3 points) Using the plotting functions discussed in class, make a scatter plot of `faft` versus `fbef`. Use a different color point and shape for each level of `grp`. Also be sure to label the axes appropriately and include a legend. Add the fitted regression line from the SLR model you estimated in Question 3 to the scatter plot. Comment on how well this line models the data.
 
     ```{r}
-    # Create the scatter plot
-    plot(data$fbef, data$faft, col = colors[data$grp], pch = shapes[data$grp], 
-         xlab = "fbef", ylab = "faft", main = "Scatter plot of faft versus fbef by treatment groups")
+    plot_colors = c("Darkorange", "Darkgrey")
+
+    plot(faft ~ fbef, data = data, 
+         col = plot_colors[grp],  pch = as.numeric(grp),
+         xlab = "fbef", ylab = "faft")
 
     abline(model)
 
     # Add legend
     legend("topright", legend = levels(factor(data$grp)), 
-           col = unique(colors), pch = unique(shapes))
+           col = unique(plot_colors), pch = as.numeric(data$grp))
     ```
+
+    The fitted line fits well but it is clear that there are outliers depending on the treatment. We are underestimating the treat group and over estimating the control group.
 
 5.  (5 points) Fit an additive multiple regression model with `faft` as the response and `fbef` and `grp` as the predictors. Give the two separate estimated regression equations for the `control` and `treat` groups.
 
     ```{r}
     model1 = lm(faft ~ fbef + grp, data = data)
     coef(model1)
-    int_control = coef(model1)[1]
-    int_treat = coef(model1)[1] + coef(model1)[3]
-    slope_all_species = coef(model1)[2]
     ```
+
+    ```{r}
+    (int_control = coef(model1)[1])
+    ```
+
+    ```{r}
+    (int_treat = coef(model1)[1] + coef(model1)[3])
+    ```
+
+    ```{r}
+    (slope_all_species = coef(model1)[2])
+    ```
+
+    $$
+    \begin{cases} 
+          faft = 25.191 + .797fbef & \text{for control}\\
+          faft = 29.914 + .797fbef & \text{for treat}
+       \end{cases}
+    $$
 
 6.  (3 points) Using the plotting functions discussed in class, make a scatter plot of `faft` versus `fbef`. Use a different color point and shape for each level of `grp`. Also be sure to label the axes appropriately and include a legend. Add the two fitted regression lines from the additive model to the scatter plot with the same colors as their respective points (one line for each level of `grp`). Comment on how well these lines model the data.
 
@@ -101,6 +127,8 @@ In this exercise, we will determine if there is a statistically significant *ave
     legend("topleft", levels(data$grp), col=plot_colors,  pch = c(1, 2, 3))
     ```
 
+    This line fits better than the standard model. But it is clear that there is underestimating and overestimating for both indicating the slope may be different for the two groups.
+
 7.  (6 points) Use an appropriate test to determine whether there is a significant average treatment effect, that is, perform a test to compare the model from Question 3 to the model from Question 5. Report the following:
 
     -   The null and alternative hypotheses.
@@ -112,6 +140,16 @@ In this exercise, we will determine if there is a statistically significant *ave
     ```{r}
     anova(model, model1)
     ```
+
+Null Hypothesis: $\beta_2 = 0$
+
+Alternative Hypothesis: $\beta_2 \neq 0$
+
+F Statistic: 10.35
+
+$p$-value: .0019
+
+The $p$-value is less than .01. We reject the null hypothesis. We prefer the additive model.
 
 ## Exercise 2 (The Iris Data Set) [35 Points]
 
@@ -140,6 +178,8 @@ For this exercise, we will model `Sepal.Width` as a function of `Sepal.Length` a
     str(iris)
     ```
 
+    The reference level chosen is setosa.
+
 2.  (2 points) Using the plotting functions discussed in class, make a scatter plot of `Sepal.Width` versus `Sepal.Length`. Use a different color point and shape for each `Species`. Also be sure to label the axes appropriately and include a legend. Based on the scatter plot, does the linear relationship between `Sepal.Width` and `Sepal.Length` seem to differ between flower species? Briefly explain.
 
     ```{r}
@@ -153,12 +193,18 @@ For this exercise, we will model `Sepal.Width` as a function of `Sepal.Length` a
     legend("topleft", levels(iris$Species), col=plot_colors,  pch = c(1, 2, 3))
     ```
 
+    It seems they differ completely. Versicolor and Virginica may have some common attributes but Setosa has no overlap.
+
 3.  (4 points) Estimate a simple linear regression model with `Sepal.Width` as the response and only `Sepal.Length` as the predictor. Give the estimated regression equation and an estimate for the average change in `Sepal.Width` for a 1 cm increase in `Sepal.Length` for `setosa` flowers.
 
     ```{r}
     iris_model = lm(Sepal.Width ~ Sepal.Length, data = iris)
     coef(iris_model)
     ```
+
+    $$
+    \text{Sepal.Width}
+    = 3.42 - .062\text{Sepal.Length}$$
 
 4.  (3 points) Using the plotting functions discussed in class, make a scatter plot of `Sepal.Width` versus `Sepla.Length`. Use a different color point and shape for each `Species`. Also be sure to label the axes appropriately and include a legend. Add the fitted regression line for the SLR model you estimated in Question 3 to the scatter plot. Comment on how well this line models the data.
 
@@ -175,16 +221,26 @@ For this exercise, we will model `Sepal.Width` as a function of `Sepal.Length` a
     legend("topleft", levels(iris$Species), col=plot_colors,  pch = c(1, 2, 3))
     ```
 
+    The line does not fit well at all. We are drastically underestimating Setosa, and overestimating both Versicolor and Virginica.
+
 5.  (4 points) Fit an additive multiple regression model with `Sepal.Width` as the response and `Sepal.Length` and `Species` as the predictors. Give the three separate estimated regression equations for `setosa`, `versicolor`, and `virginica` flowers. Also, give an estimate for the average change in `Sepal.Width` for a 1 cm increase in `Sepal.Length` for `setosa` flowers.
 
     ```{r}
     iris_model_add = lm(Sepal.Width ~ Sepal.Length + Species, data = iris)
     coef(iris_model_add)
-    int_setosa = coef(iris_model_add)[1]
-    int_versicolor = coef(iris_model_add)[1] + coef(iris_model_add)[3]
-    int_virginica = coef(iris_model_add)[1] + coef(iris_model_add)[4]
-    slope_all_species = coef(iris_model_add)[2]
+    (int_setosa = coef(iris_model_add)[1])
+    (int_versicolor = coef(iris_model_add)[1] + coef(iris_model_add)[3])
+    (int_virginica = coef(iris_model_add)[1] + coef(iris_model_add)[4])
+    (slope_all_species = coef(iris_model_add)[2])
     ```
+
+    $$
+    \begin{cases} 
+          \text{Sepal.Width} = 1.68 + .35\text{Sepal.Length} & \text{for Setosa}\\
+          \text{Sepal.Width} = .69 + .35\text{Sepal.Length} & \text{for Versicolor}\\
+    \text{Sepal.Width} = .67 + .35\text{Sepal.Length} & \text{for Virginica}\\
+       \end{cases}
+    $$
 
 6.  (3 points) Using the plotting functions discussed in class, make a scatter plot of `Sepal.Width` versus `Sepal.Length`. Use a different color point and shape for each `Species`. Also be sure to label the axes appropriately and include a legend. Add the three fitted regression lines from the additive model to the scatter plot with the same colors as their respective points (one line for each species type). Comment on how well these lines model the data.
 
@@ -203,6 +259,8 @@ For this exercise, we will model `Sepal.Width` as a function of `Sepal.Length` a
     legend("topleft", levels(iris$Species), col=plot_colors,  pch = c(1, 2, 3))
     ```
 
+    These lines fit the data much better. There is some underestimating and overestimating for Versicolor and Virginica. Suggesting different intercepts but it is much better.
+
 7.  (5 points) Use an appropriate test to compare the SLR model from Question 3 to the additive model in Question 5 at an $\alpha = 0.01$ significance level. Report the following:
 
     -   The null and alternative hypotheses.
@@ -213,18 +271,42 @@ For this exercise, we will model `Sepal.Width` as a function of `Sepal.Length` a
 
     -   The model you prefer based on the results of the test
 
+    ```{r}
+    anova(iris_model, iris_model_add)
+    ```
+
+    Null Hypothesis: $\beta_2 = 0$
+
+    Alternative Hypothesis: $\beta_2 \neq 0$
+
+    F Statistic: 94.13
+
+    $p$-value: $5.49 \times e^{-27}$
+
+    The $p$-value is less than .01. We reject the null hypothesis. We prefer the additive model.
+
 8.  (4 points) Fit an interaction MLR model with `Sepal.Width` as the response and `Sepal.Length` and `Species` as the predictors. Give the three separate estimated regression equations for `setosa`, `versicolor`, and `virginica` flowers. Also, give an estimate for the average change in `Sepal.Width` for a 1 cm increase in `Sepal.Length` for `setosa` flowers.
 
     ```{r}
     model_int = lm(Sepal.Width ~ Sepal.Length * Species, data = iris)
     coef(model_int)
-    int_setosa = coef(model_int)[1]
-    int_versicolor = coef(model_int)[1] + coef(model_int)[3]
-    int_virginica = coef(model_int)[1] + coef(model_int)[4]
-    slope_setosa =  coef(model_int)[2]
-    slope_versicolor = coef(model_int)[2] + coef(model_int)[5]
-    slope_virginica = coef(model_int)[2] + coef(model_int)[6]
+    (int_setosa = coef(model_int)[1])
+    (int_versicolor = coef(model_int)[1] + coef(model_int)[3])
+    (int_virginica = coef(model_int)[1] + coef(model_int)[4])
+    (slope_setosa =  coef(model_int)[2])
+    (slope_versicolor = coef(model_int)[2] + coef(model_int)[5])
+    (slope_virginica = coef(model_int)[2] + coef(model_int)[6])
     ```
+
+    $$
+    \begin{cases} 
+          \text{Sepal.Width} = -.57 + .8\text{Sepal.Length} & \text{for Setosa}\\
+          \text{Sepal.Width} = .87 + .32\text{Sepal.Length} & \text{for Versicolor}\\
+    \text{Sepal.Width} = 1.45 + .23\text{Sepal.Length} & \text{for Virginica}\\
+       \end{cases}
+    $$
+
+    The estimated average change in Sepal.Width for a 1 cm increase in Sepal.Length for the Setosa flowers is .8 cm.
 
 9.  (3 points) Using the plotting functions discussed in class, make a scatter plot of `Sepal.Width` versus `Sepal.Length`. Use a different color point and shape for each `Species`. Also be sure to label the axes appropriately and include a legend. Add the three fitted regression lines from the interaction model to the scatter plot with the same colors as their respective points (one line for each species type). Comment on how well these lines model the data.
 
@@ -243,6 +325,8 @@ For this exercise, we will model `Sepal.Width` as a function of `Sepal.Length` a
     legend("topleft", levels(iris$Species), col=plot_colors,  pch = c(1, 2, 3))
     ```
 
+    These lines fit much better than the additive model. All three lines model the data very well.
+
 10. (5 points) Use an appropriate test to compare the additive model from Question 5 to the interaction model in Question 8 at an $\alpha = 0.01$ significance level. Report the following:
 
     -   The null and alternative hypotheses.
@@ -252,6 +336,20 @@ For this exercise, we will model `Sepal.Width` as a function of `Sepal.Length` a
     -   The $p$-value of the test.
 
     -   The model you prefer based on the results of the test.
+
+```{r}
+anova(iris_model_add, model_int)
+```
+
+-   Null Hypothesis: $\beta_2 = 0$
+
+-   Alternative Hypothesis: $\beta_2 \neq 0$
+
+-   F Statistic: 10.2
+
+-   $p$-value: $7.19 \times e^{-05}$
+
+-   The $p$-value is less than .01. We reject the null hypothesis. We prefer the interaction model.
 
 ## Exercise 3 (2015 EPA Emissions Data Set) [40 Points]
 
@@ -276,6 +374,8 @@ In this exercise, we will model `CO2` a a function of `horse` and `type`.
     str(epa)
     ```
 
+    The default reference level is Both.
+
 2.  (2 points) Using the plotting functions discussed in class, make a scatter plot of `CO2` versus `horse`. Use a different color point and shape for each vehicle `type`. Also be sure to label the axes appropriately and include a legend. Based on the scatter plot, does the linear relationship between `CO2` and `horse` seem to differ between vehicle type? Briefly explain.
 
     ```{r}
@@ -289,12 +389,19 @@ In this exercise, we will model `CO2` a a function of `horse` and `type`.
     legend("topleft", levels(epa$type), col=plot_colors,  pch = c(1, 2, 3))
     ```
 
+    There seems to be a linear relationship between CO2 and Horsepower for every type of vehicle.
+
 3.  (4 points) Estimate a simple linear regression model with `CO2` as the response and only `horse` as the predictor. Give the estimated regression equation and an estimate for the average change in `CO2` for a one foot-pound per second increase in `horse` for a vehicle of type `Truck`.
 
     ```{r}
     epa_model = lm(CO2 ~ horse, data = epa)
     coef(epa_model)
     ```
+
+    $$
+    \text{Horsepower}
+    = 154.72 + .55\text{CO2}
+    $$
 
 4.  (3 points) Using the plotting functions discussed in class, make a scatter plot of `CO2` versus `horse`. Use a different color point and shape for each vehicle `type`. Also be sure to label the axes appropriately and include a legend. Add the fitted regression line for the SLR model you estimated in Question 3 to the scatter plot. Comment on how well this line models the data.
 
@@ -310,16 +417,26 @@ In this exercise, we will model `CO2` a a function of `horse` and `type`.
     legend("topleft", levels(epa$type), col=plot_colors,  pch = c(1, 2, 3))
     ```
 
+    The line does not approximate the data well. There is overestimating and underestimating on every type of vehicle.
+
 5.  (5 points) Fit an additive multiple regression model with `CO2` as the response and `horse` and `type` as the predictors. Give the three separate estimated regression equations for `Car`, `Truck`, and `Both` vehicles. Also, give an estimate for the average change in `CO2` for a one foot-pound per second increase in `horse` for a vehicle of type `Truck`.
 
     ```{r}
     epa_model_add = lm(CO2 ~ horse + type, data = epa)
     coef(epa_model_add)
-    int_both = coef(epa_model_add)[1]
-    int_car = coef(epa_model_add)[1] + coef(epa_model_add)[3]
-    int_truck = coef(epa_model_add)[1] + coef(epa_model_add)[4]
-    slope_all_types = coef(epa_model_add)[2]
+    (int_both = coef(epa_model_add)[1])
+    (int_car = coef(epa_model_add)[1] + coef(epa_model_add)[3])
+    (int_truck = coef(epa_model_add)[1] + coef(epa_model_add)[4])
+    (slope_all_types = coef(epa_model_add)[2])
     ```
+
+    $$
+    \begin{cases} 
+          \text{Horsepower} = 156 + .56\text{CO2} & \text{for Both}\\
+          \text{Horsepower} = 134 + .56\text{CO2} & \text{for Car}\\
+    \text{Horsepower} = 196 + .56\text{CO2} & \text{for Truck}\\
+       \end{cases}
+    $$
 
 6.  (3 points) Using the plotting functions discussed in class, make a scatter plot of `CO2` versus `horse`. Use a different color point and shape for each vehicle `type`. Also be sure to label the axes appropriately and include a legend. Add the three fitted regression lines from the additive model to the scatter plot with the same colors as their respective points (one line for each species type). Comment on how well these lines model the data.
 
@@ -348,18 +465,40 @@ In this exercise, we will model `CO2` a a function of `horse` and `type`.
 
     -   The model you prefer based on the results of the test
 
+    ```{r}
+    anova(epa_model, epa_model_add)
+    ```
+
+    Null Hypothesis: $\beta_2 = 0$
+
+    Alternative Hypothesis: $\beta_2 \neq 0$
+
+    F Statistic: 203.31
+
+    $p$-value: $3.48 \times e^{-85}$
+
+    The $p$-value is less than .05. We reject the null hypothesis. We prefer the additive model.
+
 8.  (5 points) Fit an interaction MLR model with `CO2` as the response and `horse` and `type` as the predictors. Give the three separate estimated regression equations for `Car`, `Truck`, and `Both` vehicles. Also, give an estimate for the average change in `CO2` for a one foot-pound per second increase in `horse` for a vehicle of type `Truck`.
 
     ```{r}
     epa_model_int = lm(CO2 ~ horse*type, data = epa)
     coef(epa_model_int)
-    int_both = coef(epa_model_int)[1]
-    int_car = coef(epa_model_int)[1] + coef(epa_model_int)[3]
-    int_truck = coef(epa_model_int)[1] + coef(epa_model_int)[4]
-    slope_both =  coef(epa_model_int)[2]
-    slope_car = coef(epa_model_int)[2] + coef(epa_model_int)[5]
-    slope_truck = coef(epa_model_int)[2] + coef(epa_model_int)[6]
+    (int_both = coef(epa_model_int)[1])
+    (int_car = coef(epa_model_int)[1] + coef(epa_model_int)[3])
+    (int_truck = coef(epa_model_int)[1] + coef(epa_model_int)[4])
+    (slope_both =  coef(epa_model_int)[2])
+    (slope_car = coef(epa_model_int)[2] + coef(epa_model_int)[5])
+    (slope_truck = coef(epa_model_int)[2] + coef(epa_model_int)[6])
     ```
+
+    $$
+    \begin{cases} 
+          \text{Horsepower} = 150 + .59\text{CO2} & \text{for Both}\\
+          \text{Horsepower} = 139 + .54\text{CO2} & \text{for Car}\\
+    \text{Horsepower} = 158 + .70\text{CO2} & \text{for Truck}\\
+       \end{cases}
+    $$
 
 9.  (3 points) Using the plotting functions discussed in class, make a scatter plot of `CO2` versus `horse`. Use a different color point and shape for each vehicle `type`. Also be sure to label the axes appropriately and include a legend. Add the three fitted regression lines from the interaction model to the scatter plot with the same colors as their respective points (one line for each species type). Comment on how well these lines model the data.
 
@@ -379,6 +518,8 @@ In this exercise, we will model `CO2` a a function of `horse` and `type`.
     legend("topleft", levels(epa$type), col=plot_colors,  pch = c(1, 2, 3))
     ```
 
+    This model fits the data much better than both of the previous models. Both of these lines explain the data much better.
+
 10. (5 points) Use an appropriate test to compare the additive model from Question 5 to the interaction model in Question 8 at an $\alpha = 0.05$ significance level. Report the following:
 
     -   The null and alternative hypotheses.
@@ -388,5 +529,19 @@ In this exercise, we will model `CO2` a a function of `horse` and `type`.
     -   The $p$-value of the test.
 
     -   The model you prefer based on the results of the test.
+
+    ```{r}
+    anova(epa_model_add, epa_model_int)
+    ```
+
+    -   Null Hypothesis: $\beta_2 = 0$
+
+    -   Alternative Hypothesis: $\beta_2 \neq 0$
+
+    -   F Statistic: 11.1
+
+    -   $p$-value: $1.56 \times e^{-05}$
+
+    -   The $p$-value is less than .05. We reject the null hypothesis. We prefer the interaction model.
 
 11. (3 points) Give a 95% prediction interval using the model you chose in Question 10 for a 2015 BMW M4, which is a vehicle with 425 horse power and considered type `Car`.
