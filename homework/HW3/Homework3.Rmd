@@ -321,7 +321,7 @@ For this exercise, we will consider three models, each with Wins as the response
 2.  (10 points) Use an $F$-test to compare Model 3 to your preferred model from part (1). Report the following:
     -   The null hypothesis.
 
-        -   $\beta_1 = \beta_2 = \beta_3 = \beta_4 = \beta_5  = 0$
+        -   $\beta_1 = \beta_2 = \beta_3 = \beta_4 = \beta_5 = 0$
 
     -   $\mathsf{SSE_F}$, $\mathsf{SSE_R}$, and their associated degrees of freedom.
 
