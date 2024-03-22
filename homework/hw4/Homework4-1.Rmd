@@ -2,9 +2,9 @@
 title: 'STA 5207: Homework 4'
 date: 'Due: Friday, February 9 by 11:59 PM'
 output:
+  pdf_document: default
   html_document:
     df_print: paged
-  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -178,7 +178,7 @@ For this exercise, we will model `Sepal.Width` as a function of `Sepal.Length` a
     str(iris)
     ```
 
-    The reference level chosen is setosa.
+    The reference level chosen is Setosa.
 
 2.  (2 points) Using the plotting functions discussed in class, make a scatter plot of `Sepal.Width` versus `Sepal.Length`. Use a different color point and shape for each `Species`. Also be sure to label the axes appropriately and include a legend. Based on the scatter plot, does the linear relationship between `Sepal.Width` and `Sepal.Length` seem to differ between flower species? Briefly explain.
 
@@ -205,6 +205,8 @@ For this exercise, we will model `Sepal.Width` as a function of `Sepal.Length` a
     $$
     \text{Sepal.Width}
     = 3.42 - .062\text{Sepal.Length}$$
+
+    The estimated average change in Sepal.Width for a 1 cm increase in Sepal.Length for the Setosa flowers is -.062 cm.
 
 4.  (3 points) Using the plotting functions discussed in class, make a scatter plot of `Sepal.Width` versus `Sepla.Length`. Use a different color point and shape for each `Species`. Also be sure to label the axes appropriately and include a legend. Add the fitted regression line for the SLR model you estimated in Question 3 to the scatter plot. Comment on how well this line models the data.
 
@@ -241,6 +243,8 @@ For this exercise, we will model `Sepal.Width` as a function of `Sepal.Length` a
     \text{Sepal.Width} = .67 + .35\text{Sepal.Length} & \text{for Virginica}\\
        \end{cases}
     $$
+
+    The estimated average change in Sepal.Width for a 1 cm increase in Sepal.Length for the Setosa flowers is .35 cm.
 
 6.  (3 points) Using the plotting functions discussed in class, make a scatter plot of `Sepal.Width` versus `Sepal.Length`. Use a different color point and shape for each `Species`. Also be sure to label the axes appropriately and include a legend. Add the three fitted regression lines from the additive model to the scatter plot with the same colors as their respective points (one line for each species type). Comment on how well these lines model the data.
 
@@ -403,6 +407,8 @@ In this exercise, we will model `CO2` a a function of `horse` and `type`.
     = 154.72 + .55\text{CO2}
     $$
 
+    The estimated for the average change in CO2 for a one foot-pound per second increase in horsepower for a vehicle of type truck is .55 g/mi.
+
 4.  (3 points) Using the plotting functions discussed in class, make a scatter plot of `CO2` versus `horse`. Use a different color point and shape for each vehicle `type`. Also be sure to label the axes appropriately and include a legend. Add the fitted regression line for the SLR model you estimated in Question 3 to the scatter plot. Comment on how well this line models the data.
 
     ```{r}
@@ -438,6 +444,8 @@ In this exercise, we will model `CO2` a a function of `horse` and `type`.
        \end{cases}
     $$
 
+    The estimated for the average change in CO2 for a one foot-pound per second increase in horsepower for a vehicle of type truck is .56 g/mi.
+
 6.  (3 points) Using the plotting functions discussed in class, make a scatter plot of `CO2` versus `horse`. Use a different color point and shape for each vehicle `type`. Also be sure to label the axes appropriately and include a legend. Add the three fitted regression lines from the additive model to the scatter plot with the same colors as their respective points (one line for each species type). Comment on how well these lines model the data.
 
     ```{r}
@@ -454,6 +462,8 @@ In this exercise, we will model `CO2` a a function of `horse` and `type`.
 
     legend("topleft", levels(epa$type), col=plot_colors,  pch = c(1, 2, 3))
     ```
+
+    The lines fit well but there is a drastic overestimation of cars.
 
 7.  (5 points) Use an appropriate test to compare the SLR model from Question 3 to the additive model in Question 5 at an $\alpha = 0.05$ significance level. Report the following:
 
@@ -500,6 +510,8 @@ In this exercise, we will model `CO2` a a function of `horse` and `type`.
        \end{cases}
     $$
 
+    The estimated for the average change in CO2 for a one foot-pound per second increase in horsepower for a vehicle of type truck is .70 g/mi.
+
 9.  (3 points) Using the plotting functions discussed in class, make a scatter plot of `CO2` versus `horse`. Use a different color point and shape for each vehicle `type`. Also be sure to label the axes appropriately and include a legend. Add the three fitted regression lines from the interaction model to the scatter plot with the same colors as their respective points (one line for each species type). Comment on how well these lines model the data.
 
     ```{r}
@@ -545,3 +557,10 @@ In this exercise, we will model `CO2` a a function of `horse` and `type`.
     -   The $p$-value is less than .05. We reject the null hypothesis. We prefer the interaction model.
 
 11. (3 points) Give a 95% prediction interval using the model you chose in Question 10 for a 2015 BMW M4, which is a vehicle with 425 horse power and considered type `Car`.
+
+    ```{r}
+    predict(epa_model_int, newdata = data.frame(horse = 425, type = "Car"),
+            interval = 'prediction', level = 0.95)
+    ```
+
+The 95% prediction interval for the CO2 for a 2015 BMW M4 car with a horsepower of 425 is (202.7, 536.5) g/mi.
