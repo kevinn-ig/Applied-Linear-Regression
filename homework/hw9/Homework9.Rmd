@@ -1,0 +1,217 @@
+---
+title: 'STA 5207: Homework 9'
+date: 'Due: Friday, April 5th by 11:59 PM'
+output:
+  html_document:
+    df_print: paged
+editor_options:
+  markdown:
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Include your R code in an R chunks as part of your answer. In addition,
+your written answer to each exercise should be self-contained so that
+the grader can determine your solution without reading your code or
+deciphering its output.
+
+```{r, echo = FALSE}
+library(MASS)
+library(olsrr)
+library(lmtest)
+library(faraway)
+```
+
+## Exercise 1 (Brains) [40 points]
+
+For this exercise, we will use the `mammals` data set in the `MASS`
+package. You can also find the data in `mammals.csv` on Canvas. The data
+set contains the average brain and body weights of 62 species of land
+mammals. There are 62 observations and two variables:
+
+-   `body`: Average body weight in kilograms (kg).
+-   `brain`: Average brain weight in grams (g).
+
+In the following exercise, we will use `brain` as the response and
+`body` as the predictor.
+
+1.  (5 points) Perform OLS regression with `brain` as the response and
+    `body` as the predictor. Check the normality and constant variance
+    assumptions using a hypothesis test at the $\alpha = 0.05$ level. Do
+    you feel that they have been violated? Justify your answer.
+
+    ```{r}
+    model = lm(brain ~ body, data = mammals)
+
+    shapiro.test(resid(model))
+
+    bptest(model)
+    ```
+
+2.  (3 points) Create a scatter plot of the data and add the fitted
+    regression line. Based on this plot, does their appear to be any
+    outliers, high-leverage points, or high influential data points?
+    Include the plot in your response.
+
+    ```{r}
+    plot(brain ~ body, data = mammals, xlab = "Average body weight (kg)", ylab = "Average brain weight (g)")
+
+    abline(model, col = "red")
+    ```
+
+3.  (6 points) Since the body weights range over more than one order of
+    magnitude and are strictly positive, we will use
+    $\log(\texttt{body})$ as our *predictor*, with no further
+    justification (Recall *the log rule*: if the values of a variable
+    range over more than one order of magnitude and the variable is
+    strictly positive, then replacing the variable by its logarithm may
+    be helpful). Use the Box-Cox method to verify that
+    $\log(\texttt{brain})$ is then a "recommended" transformation of the
+    *response* variable. That is, verify that the log transformation is
+    amoung the "recommended" values of $\lambda$ when considering, $$
+    g_{\lambda}(\texttt{brain}) = \beta_0 + \beta_1 \log(\texttt{body}) + \varepsilon_i.
+    $$ Report the relevant plot returned by the `boxcox` function and
+    use the appropriate zoom onto the relevant values. Indicating the
+    property of the plot that justifies the $\log$ transformation.
+
+    ```{r}
+    bc = boxcox(model, plotit = TRUE)
+    bc$x[which.max(bc$y)]
+    ```
+
+4.  (5 points) Fit the model justified in Question 3. That is, fit a
+    model with $\log(\texttt{brain})$ as the response and
+    $\log(\texttt{body})$ as the predictor. Create a scatter plot of the
+    data and add the fitted regression line for this model. Does a
+    linear relationship seem to be appropriate here?
+
+    ```{r}
+    model = lm(log(brain) ~ log(body), data = mammals)
+    plot(brain ~ body, data = mammals, xlab = "Average body weight (kg)", ylab = "Average brain weight (g)")
+
+    abline(model, col = "red")
+    ```
+
+5.  (3 points) Based on the model from Question 4, check the normality
+    and constant variance assumptions using a hypothesis test at the
+    $\alpha = 0.05$ level. Do you feel that they have been violated?
+    Justify your answer.
+
+    ```{r}
+    shapiro.test(resid(model))
+
+    bptest(model)
+    ```
+
+6.  (6 points) Using the model from Question 4, check for any high
+    influential observations. Report any observations you determine to
+    be highly influential.
+
+    ```{r}
+    high_lev_ids = which(hatvalues(model) > 2 * mean(hatvalues(model)))
+    high_lev_ids
+    ```
+
+7.  (6 points) Use the model in Question 4 to predict the brain weight
+    of a male Snorlax, which has a body weight of 1014.1 *pounds*. (A
+    Snorlax would be a mammal, right?) Construct a 90% prediction
+    interval.
+
+8.  (6 points) A common measure of model performance is the root mean
+    squared error (RMSE), which is defined as $$
+    \mathsf{RMSE} = \sqrt{\frac{1}{n} \sum_{i=1}^n (y_i - \hat{y}_i)^2}.
+    $$ We prefer models with a lower $\mathsf{RMSE}$. Report the
+    $\mathsf{RMSE}$ values for the model in Question 1 and Question 4.
+    Based on this criteria, which model do you prefer?
+
+## Exercise 2 (TV and Health) [40 points]
+
+For this exercise, we will use the `tvdoctor` data set in the `faraway`
+package. You can also find the data in `tvdoctor.csv` on Canvas. The
+data set contains information on life expectancy, doctors, and
+televisions collected in 38 countries in 1993. There are 38 observations
+on three variables:
+
+-   `life`: Life expectancy in years.
+-   `tv`: Number of people per television set.
+-   `doctor`: Number of people per doctor.
+
+In the following exercise, we will use `life` as the response and `tv`
+as the predictor.
+
+1.  (6 points) Use forward selection based on $t$-tests at the
+    $\alpha = 0.05$ level to select a $d$-th degree polynomial model
+    with `life` as the response and `tv` as the predictor. Report the
+    estimated regression equation for your chosen model.
+
+    ```{r}
+    model_poly1 = lm(life ~ tv, data = tvdoctor)
+
+    summary(model_poly1)
+    ```
+
+2.  (6 points) Fit polynomial models of degree 1 and 2. Create a scatter
+    plot of the data and add the fitted regression line for each
+    polynomial model. Include the plot in your response.
+
+3.  (3 points) Check for any high *leverage* points using the quadratic
+    model you fit in Question 2. Report any observations you determine
+    to have high leverage.
+
+4.  (6 points) Use forward selection based on $t$-tests at the
+    $\alpha = 0.05$ level to select a $d$-th degree polynomial model
+    with `life` as the response and `tv` as the predictor with the high
+    *leverage* data points you identified in Question 3 removed. Report
+    the estimated regression equation for your chosen model.
+
+5.  (6 points) Fit polynomial models of degree 1 and 2 with the high
+    *leverage* data points you identified in Question 3 removed. Create
+    a scatter plot of the data (**Note**: use the `subset` argument to
+    `plot`) and add the fitted regression line for each polynomial
+    model. Include the plot in your response.
+
+6.  (5 points) Since the number of people per television set (`tv`)
+    ranges over more than one order of magnitude and are strictly
+    positive, we might use $\log(\texttt{tv})$ as our predictor. Fit an
+    OLS regression model with `life` as the response and
+    $\log(\texttt{tv})$ as the predictor. Report the estimated
+    regression equation for this model.
+
+7.  (3 points) Create a scatter plot of the `life` vs
+    $\log(\texttt{tv})$ and add the fitted regression line for model you
+    fit in Question 6. Include the plot in your response.
+
+8.  (5 points) Report the adjusted $R^2$ values for the quadratic model
+    you fit in Question 2 and the model you fit in Question 6. Based on
+    this criteria, which model do you prefer?
+
+## Excercise 3 (The `cars` Data Set) [20 points]
+
+For this exercise, we will use the built-in `cars` data set. You can
+also find the data in `cars.csv` on Canvas. In the following exercise,
+we will use `dist` as the response and `speed` as the predictor.
+
+1.  (5 points) Perform OLS regression with `dist` as the response and
+    `speed` as the predictor. Check the normality and constant variance
+    assumptions using a hypothesis test at the $\alpha = 0.05$ level. Do
+    you feel that they have been violated? Justify your answer.
+
+2.  (10 points) Use the Box-Cox method to verify that
+    $\sqrt{\texttt{dist}}$ is a "recommended" transformation of the
+    *response* variable. That is, verify that the square-root
+    transformation is among the "recommended" values of $\lambda$ when
+    considering, $$
+    g_{\lambda}(\texttt{dist}) = \beta_0 + \beta_1 \texttt{speed} + \varepsilon_i.
+    $$ Report the relevant plot returned by the `boxcox` function and
+    use the appropriate zoom onto the relevant values. Indicating the
+    property of the plot that justifies the square-root transformation.
+
+3.  (5 points) Fit the model justified in Question 2. That is, fit a
+    model with $\sqrt{\texttt{dist}}$ as the response and
+    $\texttt{speed}$ as the predictor. Check the normality and constant
+    variance assumptions using a hypothesis test at the $\alpha = 0.05$
+    level. Do you feel that they have been violated? Justify your
+    answer.
