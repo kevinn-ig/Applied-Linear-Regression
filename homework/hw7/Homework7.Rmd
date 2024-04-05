@@ -2,6 +2,7 @@
 title: 'STA 5207: Homework 7'
 date: 'Due: March, 8th by 11:59 PM'
 output:
+  pdf_document: default
   html_document:
     df_print: paged
 ---
@@ -48,6 +49,12 @@ data = read.csv("longley.csv")
 
     ```
 
+    There are 6 pairs of highly correlated predictors,
+
+    (Population, GNP.deflator), (Population, GNP), (Population, year), (GNP.deflator, GNP), (GNP.deflator, Year), and (GNP, Year)
+
+    The most highly correlated pair is (GNP, Year) at .995.
+
 2.  (6 points) Fit a model with `Employed` as the response and the remaining variables as predictors. Give the condition number. Does multicollinearity appear to be a problem?
 
     ```{r}
@@ -58,6 +65,8 @@ data = read.csv("longley.csv")
     round(ols_eigen_cindex(model)[, 1:2], 4)
     ```
 
+    The condition number is 43275.04, which is on the last row of the output. We should definitely be worried about colinearity.
+
 3.  (6 points) Calculate and report the variance inflation factor (VIF) for each of the predictors. Which variable has the largest VIF? Do any of the VIFs suggest multicollinearity?
 
     ```{r}
@@ -67,11 +76,15 @@ data = read.csv("longley.csv")
     summary(model)
     ```
 
+    GNP.deflator, GNP, Unemployed, Population, and Year all have very high VIF, with the largest being 1788.5 from GNP. This strongly suggests colinearity.
+
 4.  (6 points) What proportion of the observed variation in `Population` is explained by the linear relationship with the other predictors? Are there any variables that are nearly orthogonal to the others? Consider a low $R^2_k$ to be less than 0.3.
 
     ```{r}
     1 - 1/vif(model)
     ```
+
+    None of the variables seem to be nearly orthogonal. 99.5% of the observed variation in population is explain by the linear relationship with the other predictors.
 
 5.  (6 points) Give the condition indices. How many near linear-dependencies are likely causing most of the problem?
 
@@ -81,12 +94,16 @@ data = read.csv("longley.csv")
     round(ols_eigen_cindex(model), 3)
     ```
 
+    There are three near linear-dependencies. In $\kappa_5$, its dominated by GNP.deflator and armed forces. $\kappa_6$ is dominated by GNP.Deflator and population. $\kappa_7$ is dominated by GNP and Unemployed.
+
 6.  (10 points) Fit a new model with `Employed` as the the response and the predictors from the model in part 2 that were significant (use $\alpha = 0.05$). Calculate and report the variance inflation factor for each of the predictors. Do any of the VIFs suggest multicollinearity?
 
     ```{r}
     fixed_model = lm(Employed ~ Unemployed + Armed.Forces + Year, data = data)
     vif(fixed_model)
     ```
+
+    No they do not.
 
 7.  (10 points) Use an $F$-test to compare the models in parts 2 and 6. Report the following:
 
@@ -99,6 +116,14 @@ data = read.csv("longley.csv")
     ```{r}
     anova(model, fixed_model)
     ```
+
+    Null hypothesis: The model from part 6 does not provide a significantly better fit than the model from part 2.
+
+    Test-Statistic: 1.75
+
+    P-Value: .227
+
+    We fail to reject the null, and conclude there is no significant difference between the models. I prefer the model from part 6 as it has less predictors.
 
 ## Exercise 2 (The `sat` Data Set Revisited) [50 points]
 
@@ -126,6 +151,8 @@ data = read.csv("sat.csv")
              number.digits = 3, addCoef.col = 'black', tl.pos= 'd', cl.pos ='r')
     ```
 
+    Expend and Salary are highly correlated.
+
 2.  (8 points) Fit a model with `total` as the response and `expend`, `salary`, and `ratio` as the predictors. Give the condition number. Does multicollinearity appear to be a problem?
 
     ```{r}
@@ -136,6 +163,8 @@ data = read.csv("sat.csv")
     round(ols_eigen_cindex(model)[, 1:2], 4)
     ```
 
+    Yes, the condition number is 48.12 which is greater than 30.
+
 3.  (8 points) Calculate and report the variance inflation factor (VIF) for each of the predictors. Which variable has the largest VIF? Do any of the VIFs suggest multicollinearity?
 
     ```{r}
@@ -143,6 +172,8 @@ data = read.csv("sat.csv")
 
     vif(model)
     ```
+
+    Yes, Expend and Salary suggest multicolinearity. The highest VIF is from expend at 9.39.
 
 4.  (10 points) Fit a new model with `total` as the response and `ratio` and the sum of `expend` and `salary` -- that is `I(expend + salary)` -- as the predictors. Note that `expend` and `salary` have the same units (thousands of dollars), so adding them makes sense. Calculate and report the variance inflation factor for each of the two predictors. Do any of the VIFs suggest multicollinearity?
 
@@ -152,11 +183,25 @@ data = read.csv("sat.csv")
     vif(new_model)
     ```
 
+    No they do not.
+
 5.  (6 points) Conduct a $t$-test at the 5% significance level for each slope parameter for the model in part 4. Give the test statistic, $p$-value, and statistical decision for each test.
 
     ```{r}
     summary(new_model)
     ```
+
+    -   Test statistic: 0.382
+
+    -   p-value: 0.70399
+
+    -   Decision: Since the p-value is greater than 0.05, we fail to reject the null hypothesis. There is not enough evidence to suggest that the slope parameter for ratio is significantly different from zero.
+
+    -   Test statistic: -3.305
+
+    -   p-value: 0.00182
+
+    -   Decision: Since the p-value is less than 0.05, we reject the null hypothesis. There is sufficient evidence to suggest that the slope parameter for I(expend + salary) is significantly different from zero.
 
 6.  (10 points) Use an $F$-test to compare the models in parts 2 and 4. Report the following:
 
@@ -169,3 +214,11 @@ data = read.csv("sat.csv")
     ```{r}
     anova(new_model, model)
     ```
+
+    Null hypothesis: The model from part 4 does not provide a significantly better fit than the model from part 2.
+
+    Test-Statistic: .911
+
+    P-Value: .345
+
+    We fail to reject the null, and conclude there is no significant difference in the performance of the models. I would prefer the model from part 2 as it is a simpler model.

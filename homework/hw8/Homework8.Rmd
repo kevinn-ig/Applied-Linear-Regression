@@ -2,6 +2,8 @@
 title: 'STA 5207: Homework 8'
 date: 'Due: Friday, March 22 by 11:59 PM'
 output:
+  pdf_document: 
+    latex_engine: xelatex
   html_document:
     df_print: paged
 ---
@@ -42,6 +44,8 @@ In the following exercise, we will model the `divorce` variable in terms of `une
 
 1.  (2 points) The variable `year` is not being used in the model, but it shows that the measurements were taken across time. What does this make you suspect about the error term? No output need.
 
+    There may be autocorrelation between the error terms.
+
 2.  (6 points) Fit an OLS regression model with `divorce` as the response and all other variables except `year` as predictors. Check for serial correlation in the errors using a graphical method. Do you feel like the errors are serially correlated? Justify your answer. Include any plots in your response.
 
     ```{r}
@@ -54,6 +58,8 @@ In the following exercise, we will model the `divorce` variable in terms of `une
     abline(h=0, lwd=3, col='steelblue')
     ```
 
+    They are serially correlated since they are not scattered evenly along the line.
+
 3.  (6 points) Check for the presence of serial correlation in the errors using the Durbin-Watson test. Report the following:
 
     -   The null and alternative hypotheses.
@@ -65,35 +71,66 @@ In the following exercise, we will model the `divorce` variable in terms of `une
     dwtest(model_ols, alternative = 'two.sided')
     ```
 
-4.  (10 points) Model the serial correlation with an AR(1) process, meaning that $\Sigma_{ij} = \phi^{|i-j|}$. Use the ML method to estimate the parameters in the GLS fit. Create and report a table with the OLS estimates (model in part 2) and GLS estimates for the slope parameters.
+    Null Hypothesis: There is no serial correlation.
 
-    ```{r}
-    model_gls = gls(divorce ~ . - year, 
-                    correlation = corAR1(form = ~ year),
-                    method = 'ML', data = divusa)
+    Alternative Hypothesis: There is a serial correlation in the errors.
 
-    summary(model_gls)
-    ```
+    p-value: $2.2e^{-16}$
 
-5.  (10 points) Perform a $t$-test at the 5% significance level for each slope parameter for the OLS model in part 2 and the GLS model in part 4. Are there differences between which predictors are significant in the OLS model and which are significant in the GLS model? If so, state the changes.
+    We reject the null hypothesis, there is strong evidence that there is serial correlation between the errors.
 
-    ```{r}
-    summary(model_ols)
-    ```
+    1.  (10 points) Model the serial correlation with an AR(1) process, meaning that $\Sigma_{ij} = \phi^{|i-j|}$. Use the ML method to estimate the parameters in the GLS fit. Create and report a table with the OLS estimates (model in part 2) and GLS estimates for the slope parameters.
 
-6.  (5 points) For the GLS model in part 4, calculate and report the variance inflation factor (VIF) for each of the predictors using the `vif` function from the `car` package. Do any of these VIFs suggest we should be cautious about concluding a variable is “not significant” given the other predictors?
+        ```{r}
+        model_gls = gls(divorce ~ . - year, 
+                        correlation = corAR1(form = ~ year),
+                        method = 'ML', data = divusa)
+        (summary(model_gls))
+        (summary(model_ols))
+        ```
+
+        |     | Unemployed | Femlab | Marriage | Birth   | Military |
+        |-----|------------|--------|----------|---------|----------|
+        | OLS | -0.113     | .3836  | .1187    | -0.1300 | -.0267   |
+        | WLS | .108       | .3121  | .1643    | -.0500  | .0179    |
+
+4.  (10 points) Perform a $t$-test at the 5% significance level for each slope parameter for the OLS model in part 2 and the GLS model in part 4. Are there differences between which predictors are significant in the OLS model and which are significant in the GLS model? If so, state the changes.
+
+    Unemployed becomes more significant in the GLS model
+
+    Birth becomes more significant in the GLS model
+
+    Military remains non-significant in both models.
+
+    Femlab and marriage is highly significant in both models.
+
+5.  (5 points) For the GLS model in part 4, calculate and report the variance inflation factor (VIF) for each of the predictors using the `vif` function from the `car` package. Do any of these VIFs suggest we should be cautious about concluding a variable is “not significant” given the other predictors?
 
     ```{r}
     car::vif(model_gls)
     ```
 
-7.  (5 points) Report the estimated value of the autocorrelation parameter $\phi$ and its associated 95% confidence interval. Does the interval indicate that $\phi$ is significantly different from zero at the 5% significance level?
+    Unemployed: 1.71
+
+    Femlab: 1.90
+
+    Marriage: 2.62
+
+    Birth: 1.15
+
+    Military: 2.53
+
+    None of the VIF's suggest that we should be cautious.
+
+6.  (5 points) Report the estimated value of the autocorrelation parameter $\phi$ and its associated 95% confidence interval. Does the interval indicate that $\phi$ is significantly different from zero at the 5% significance level?
 
     ```{r}
     intervals(model_gls)
     ```
 
-8.  (6 points) Check for serial correlation in the normalized errors of the GLS model in part 4 using a graphical method. Do you feel like the normalized errors are serially correlated? Justify your answer. Include any plots in your response.
+    The confidence interval is (.653, .998), which does not include 0 so it is significantly different from zero at the 5% significance level.
+
+7.  (6 points) Check for serial correlation in the normalized errors of the GLS model in part 4 using a graphical method. Do you feel like the normalized errors are serially correlated? Justify your answer. Include any plots in your response.
 
     ```{r}
     # plot of e_i vs. e_{i+1}
@@ -104,6 +141,8 @@ In the following exercise, we will model the `divorce` variable in terms of `une
     # lines at the x and y axes
     abline(h=0, v=0, lty='dashed')
     ```
+
+    The points seem to follow a line, suggesting that they are serially correlated.
 
 ## Exercise 2 (The `gala` Data Set) [40 points]
 
@@ -131,19 +170,76 @@ In the following exercise, we will model `Species` in terms of `Area`, `Elevatio
 
     # fitted-vs-residuals plot
     ols_plot_resid_fit(model_ols)
+
+    bptest(model_ols)
     ```
+
+    They seem to be clustered in the graph, and the BP test suggests that there is a violation of the constant variation assumption. I would conclude that there is a violation of the constant variance assumption.
 
 2.  (8 points) Perform a regression of the absolute value of the residuals from the model in part 1 against the predictors `Area`, `Elevation`, and `Nearest` using OLS. Report the estimated regression equation using all 3 predictors.
 
-3.  (8 points) Perform WLS using the inverse of the squared fitted values from the model in part 2 as weights, i.e, $\texttt{weights} = 1/\text{(fitted values)}^2$. Create and report a table with the OLS estimates (model in part 1) and WLS estimates for the slope parameters.
+    ```{r}
+    model_wls = lm(abs(resid(model_ols)) ~ Area + Elevation + Nearest, data = gala)
 
-4.  (8 points) Perform a $t$-test at the 5% significance level for each slope parameter for the OLS model in part 1 and the WLS model in part 3. Are there differences between which predictors are significant in the OLS model and which are significant in the WLS model? If so, state the changes.
+    # extract the coefficient estimates.
+    coef(model_wls)
+    ```
 
-5.  (5 points) For the WLS model in part 3, calculate and report the variance inflation factor (VIF) for each of the predictors using the `vif` function from the `car` package. Do any of these VIFs suggest we should be cautious about concluding a variable is “not significant” given the other predictors?
+    $$
+    |e_i| = 5.867-.0361Area_i+.1434Elevation_i-.2558Nearest_i
+    $$
 
-6.  (6 points) Check the constant variance assumption on the weighted residuals of the WLS model using a a graphical method and a hypothesis test at the $\alpha = 0.05$ significance level. Do you feel that it has been violated? Justify your answer. Include any plots in your response.
+    1.  (8 points) Perform WLS using the inverse of the squared fitted values from the model in part 2 as weights, i.e, $\texttt{weights} = 1/\text{(fitted values)}^2$. Create and report a table with the OLS estimates (model in part 1) and WLS estimates for the slope parameters.
+
+        ```{r}
+        # calculate the weights as 1 / (fitted values)^2
+        weights = 1 / fitted(model_wls)^2
+
+        # run WLS
+        model_wls = lm(Species ~ Area + Elevation + Nearest, data = gala, weights = weights)
+        summary(model_ols)
+        summary(model_wls)
+        ```
+
+        |     | Col1   | Col2   | Col3   |
+        |-----|--------|--------|--------|
+        | OLS | .01908 | .17134 | .07123 |
+        | WLS | .02237 | .17395 | .40385 |
+
+3.  (8 points) Perform a $t$-test at the 5% significance level for each slope parameter for the OLS model in part 1 and the WLS model in part 3. Are there differences between which predictors are significant in the OLS model and which are significant in the WLS model? If so, state the changes.
+
+    Elevation remains significant in both models.
+
+    Nearest is only significant in WLS
+
+    Area remains non-significant for both
+
+4.  (5 points) For the WLS model in part 3, calculate and report the variance inflation factor (VIF) for each of the predictors using the `vif` function from the `car` package. Do any of these VIFs suggest we should be cautious about concluding a variable is “not significant” given the other predictors?
+
+    ```{r}
+    vif(model_wls)
+    ```
+
+    They are all below 5, suggesting that multicolinearity is not a problem.
+
+5.  (6 points) Check the constant variance assumption on the weighted residuals of the WLS model using a a graphical method and a hypothesis test at the $\alpha = 0.05$ significance level. Do you feel that it has been violated? Justify your answer. Include any plots in your response.
+
+    ```{r}
+    plot(fitted(model_wls), weighted.residuals(model_wls), 
+         pch = 20, xlab = 'Fitted Value', ylab = 'Weighted Residual')
+
+    abline(h=0, lwd=3, col='steelblue')
+
+    bptest(model_wls)
+    ```
+
+    Both the hypothesis test and the graphical test support that there is no violation of the constant variance assumption.
 
 ## Exercise 3 (WLS for Survey Data) [10 points]
+
+```{r}
+data = read.csv("chibus.csv")
+```
 
 For this exercise, we will use the the `chibus` data set, which can be found in `chibus.csv` on Canvas. Each observation in this data set represents a pair of zones in the city of Chicago. The variables in the data set are
 
@@ -157,4 +253,20 @@ In the following exercise, we will model `perceived_time` in terms of `computed_
 
 1.  (5 points) The variable `n` is not being used in the model, but it shows that the response is recorded as an average over different groups of size $n_i$. Based on this observation, what would make for a good choice of weights? No output is needed.
 
+    $w_i​ = n_i​$
+
 2.  (5 points) Perform WLS with `perceived_time` as the response and `computed_time` as the predictor using the weights you chose in part 1. Report the estimated regression equation for this model.
+
+    ```{r}
+    weights = data$n  # Using the number of travelers as weights
+
+    # Fit the WLS model
+    model_wls = lm(perceived_time ~ computed_time, data = data, weights = weights)
+
+    # Get the summary of the model to report the regression equation
+    summary(model_wls)
+    ```
+
+$$
+perceived\_time = 2.29 + 1.132computed\_time
+$$

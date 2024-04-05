@@ -157,9 +157,34 @@ as the predictor.
     plot of the data and add the fitted regression line for each
     polynomial model. Include the plot in your response.
 
+    ```{r}
+    model_poly2 = lm(life ~ poly(tv, 2, raw = TRUE), data = tvdoctor)
+
+    plot(life ~ tv, data = tvdoctor, xlab = "Number of people per television set", ylab = "Life expectancy in years", pch = 20, cex = 2, col = 'gray')
+
+    # fitted regression line
+    abline(model_poly1, col = 'darkorange', lty = 'dashed', lwd = 2)
+
+    # fitted regression line for the quadratic model
+    xplot = seq(0, 600, by = 0.01)
+    lines(xplot, predict(model_poly2, newdata = data.frame(tv = xplot)),
+          col = "black", lwd = 2)
+
+    # add a legend to label the two lines
+    legend("topright", title = "degree", cex = 0.8,
+           legend = c("d = 1", "d = 2"), 
+           lwd = 2, lty = c(2, 1), 
+           col = c("darkorange", "black"))
+    ```
+
 3.  (3 points) Check for any high *leverage* points using the quadratic
     model you fit in Question 2. Report any observations you determine
     to have high leverage.
+
+    ```{r}
+    high_lev_ids = which(hatvalues(model_poly2) > 2 * mean(hatvalues(model_poly2)))
+    high_lev_ids
+    ```
 
 4.  (6 points) Use forward selection based on $t$-tests at the
     $\alpha = 0.05$ level to select a $d$-th degree polynomial model
@@ -167,11 +192,41 @@ as the predictor.
     *leverage* data points you identified in Question 3 removed. Report
     the estimated regression equation for your chosen model.
 
+    ```{r}
+    non_inf_ids = which(hatvalues(model_poly2) < 2 * mean(hatvalues(model_poly2)))
+
+    model_poly1_fix = lm(life ~ tv, data = tvdoctor, subset = non_inf_ids)
+
+    summary(model_poly1_fix)
+    ```
+
 5.  (6 points) Fit polynomial models of degree 1 and 2 with the high
     *leverage* data points you identified in Question 3 removed. Create
     a scatter plot of the data (**Note**: use the `subset` argument to
     `plot`) and add the fitted regression line for each polynomial
     model. Include the plot in your response.
+
+    ```{r}
+    model_poly1_fix = lm(life ~ tv, data = tvdoctor, subset = non_inf_ids)
+
+    model_poly2_fix = lm(life ~ poly(tv, 2, raw = TRUE), data = tvdoctor, subset = non_inf_ids)
+
+    plot(life ~ tv, data = tvdoctor, subset = non_inf_ids, xlab = "Number of people per television set", ylab = "Life expectancy in years", pch = 20, cex = 2, col = 'gray')
+
+    # fitted regression line
+    abline(model_poly1_fix, col = 'darkorange', lty = 'dashed', lwd = 2)
+
+    # fitted regression line for the quadratic model
+    xplot = seq(0, 600, by = 0.01)
+    lines(xplot, predict(model_poly2_fix, newdata = data.frame(tv = xplot)),
+          col = "black", lwd = 2)
+
+    # add a legend to label the two lines
+    legend("topright", title = "degree", cex = 0.8,
+           legend = c("d = 1", "d = 2"), 
+           lwd = 2, lty = c(2, 1), 
+           col = c("darkorange", "black"))
+    ```
 
 6.  (5 points) Since the number of people per television set (`tv`)
     ranges over more than one order of magnitude and are strictly
@@ -180,9 +235,18 @@ as the predictor.
     $\log(\texttt{tv})$ as the predictor. Report the estimated
     regression equation for this model.
 
+    ```{r}
+    model = lm(life ~ log(tv), data = tvdoctor)
+    ```
+
 7.  (3 points) Create a scatter plot of the `life` vs
     $\log(\texttt{tv})$ and add the fitted regression line for model you
     fit in Question 6. Include the plot in your response.
+
+    ```{r}
+    plot(life ~ log(tv), data = tvdoctor)
+    abline(model, col = "red")
+    ```
 
 8.  (5 points) Report the adjusted $R^2$ values for the quadratic model
     you fit in Question 2 and the model you fit in Question 6. Based on
@@ -199,6 +263,13 @@ we will use `dist` as the response and `speed` as the predictor.
     assumptions using a hypothesis test at the $\alpha = 0.05$ level. Do
     you feel that they have been violated? Justify your answer.
 
+    ```{r}
+    model = lm(dist ~ speed, data = cars)
+
+    shapiro.test(resid(model))
+    bptest(model)
+    ```
+
 2.  (10 points) Use the Box-Cox method to verify that
     $\sqrt{\texttt{dist}}$ is a "recommended" transformation of the
     *response* variable. That is, verify that the square-root
@@ -209,9 +280,20 @@ we will use `dist` as the response and `speed` as the predictor.
     use the appropriate zoom onto the relevant values. Indicating the
     property of the plot that justifies the square-root transformation.
 
+    ```{r}
+    bc = boxcox(model, plotit = TRUE)
+    ```
+
 3.  (5 points) Fit the model justified in Question 2. That is, fit a
     model with $\sqrt{\texttt{dist}}$ as the response and
     $\texttt{speed}$ as the predictor. Check the normality and constant
     variance assumptions using a hypothesis test at the $\alpha = 0.05$
     level. Do you feel that they have been violated? Justify your
     answer.
+
+    ```{r}
+    model = lm(sqrt(dist) ~ speed, data = cars)
+
+    shapiro.test(resid(model))
+    bptest(model)
+    ```
