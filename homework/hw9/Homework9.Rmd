@@ -51,6 +51,14 @@ In the following exercise, we will use `brain` as the response and
     bptest(model)
     ```
 
+    With a test statistic of .411 and p-value of $2.316e^{-14}$, we
+    reject the null hypothesis and conclude the errors have a non-normal
+    distribution based on the Shapiro-Wilk test.\
+    \
+    With a test statistic of 12.537 and a p-value of .0003989, we reject
+    the null hypothesis, and conclude the constant variance assumption
+    is violated based on the Breusch-Pagan test.
+
 2.  (3 points) Create a scatter plot of the data and add the fitted
     regression line. Based on this plot, does their appear to be any
     outliers, high-leverage points, or high influential data points?
@@ -61,6 +69,8 @@ In the following exercise, we will use `brain` as the response and
 
     abline(model, col = "red")
     ```
+
+    There appear to be two outliers around 2500 kg and over 6000 kg.
 
 3.  (6 points) Since the body weights range over more than one order of
     magnitude and are strictly positive, we will use
@@ -82,6 +92,9 @@ In the following exercise, we will use `brain` as the response and
     bc$x[which.max(bc$y)]
     ```
 
+    $\hat{\lambda}$ = .0606, which suggests a logarithmic transformation
+    would be appropriate.
+
 4.  (5 points) Fit the model justified in Question 3. That is, fit a
     model with $\log(\texttt{brain})$ as the response and
     $\log(\texttt{body})$ as the predictor. Create a scatter plot of the
@@ -89,11 +102,13 @@ In the following exercise, we will use `brain` as the response and
     linear relationship seem to be appropriate here?
 
     ```{r}
-    model = lm(log(brain) ~ log(body), data = mammals)
+    model_log = lm(log(brain) ~ log(body), data = mammals)
     plot(brain ~ body, data = mammals, xlab = "Average body weight (kg)", ylab = "Average brain weight (g)")
 
-    abline(model, col = "red")
+    abline(model_log, col = "red")
     ```
+
+    A linear relationship does appear to be appropriate here.
 
 5.  (3 points) Based on the model from Question 4, check the normality
     and constant variance assumptions using a hypothesis test at the
@@ -101,24 +116,42 @@ In the following exercise, we will use `brain` as the response and
     Justify your answer.
 
     ```{r}
-    shapiro.test(resid(model))
+    shapiro.test(resid(model_log))
 
-    bptest(model)
+    bptest(model_log)
     ```
+
+    With a test statistic of .982 and p-value of 0.5293, we do reject
+    the null hypothesis and conclude the errors have a normal
+    distribution based on the Shapiro-Wilk test.
+
+    With a test statistic of .278 and a p-value of .5977, we do not
+    reject the null hypothesis, and conclude the constant variance
+    assumption is not violated based on the Breusch-Pagan test.
 
 6.  (6 points) Using the model from Question 4, check for any high
     influential observations. Report any observations you determine to
     be highly influential.
 
     ```{r}
-    high_lev_ids = which(hatvalues(model) > 2 * mean(hatvalues(model)))
-    high_lev_ids
+    high_inf_ids = which(cooks.distance(model_log) > 4 /length(resid(model_log)))
+    high_inf_ids
     ```
+
+    Human is highly influential.
 
 7.  (6 points) Use the model in Question 4 to predict the brain weight
     of a male Snorlax, which has a body weight of 1014.1 *pounds*. (A
     Snorlax would be a mammal, right?) Construct a 90% prediction
     interval.
+
+    ```{r}
+    new_data <- data.frame(body = 1014.1)
+    predict(model_log, newdata = new_data, interval = "prediction", level = 0.90)
+    ```
+
+    We are 90% confident that the brain weight of a Snorlax would be
+    between 6.139 and 8.536 grams.
 
 8.  (6 points) A common measure of model performance is the root mean
     squared error (RMSE), which is defined as $$
@@ -126,6 +159,12 @@ In the following exercise, we will use `brain` as the response and
     $$ We prefer models with a lower $\mathsf{RMSE}$. Report the
     $\mathsf{RMSE}$ values for the model in Question 1 and Question 4.
     Based on this criteria, which model do you prefer?
+
+    ```{r}
+    sqrt(mean((mammals$brain - predict(model))^2))
+
+    sqrt(mean((mammals$brain - predict(model_log))^2))
+    ```
 
 ## Exercise 2 (TV and Health) [40 points]
 
@@ -151,7 +190,12 @@ as the predictor.
     model_poly1 = lm(life ~ tv, data = tvdoctor)
 
     summary(model_poly1)
+    summary(model_poly1)$coeff
     ```
+
+    $$
+    \text{life} = 69.65 - .0000561\text{tv}
+    $$
 
 2.  (6 points) Fit polynomial models of degree 1 and 2. Create a scatter
     plot of the data and add the fitted regression line for each
@@ -186,6 +230,9 @@ as the predictor.
     high_lev_ids
     ```
 
+    There are the high leverage points at the countries of Bangladesh,
+    Ethiopia and Myanmar
+
 4.  (6 points) Use forward selection based on $t$-tests at the
     $\alpha = 0.05$ level to select a $d$-th degree polynomial model
     with `life` as the response and `tv` as the predictor with the high
@@ -198,7 +245,12 @@ as the predictor.
     model_poly1_fix = lm(life ~ tv, data = tvdoctor, subset = non_inf_ids)
 
     summary(model_poly1_fix)
+    summary(model_poly1_fix)$coeff
     ```
+
+    $$
+    \text{life} = 71.48 - .153\text{tv}
+    $$
 
 5.  (6 points) Fit polynomial models of degree 1 and 2 with the high
     *leverage* data points you identified in Question 3 removed. Create
@@ -236,8 +288,13 @@ as the predictor.
     regression equation for this model.
 
     ```{r}
-    model = lm(life ~ log(tv), data = tvdoctor)
+    model_log = lm(life ~ log(tv), data = tvdoctor)
+    summary(model_log)$coeff
     ```
+
+    $$
+    \text{life} = 77.89 - 4.26\text{tv}
+    $$
 
 7.  (3 points) Create a scatter plot of the `life` vs
     $\log(\texttt{tv})$ and add the fitted regression line for model you
@@ -245,12 +302,19 @@ as the predictor.
 
     ```{r}
     plot(life ~ log(tv), data = tvdoctor)
-    abline(model, col = "red")
+    abline(model_log, col = "red")
     ```
 
 8.  (5 points) Report the adjusted $R^2$ values for the quadratic model
     you fit in Question 2 and the model you fit in Question 6. Based on
     this criteria, which model do you prefer?
+
+    ```{r}
+    SST = sum((tvdoctor$life - mean(tvdoctor$life))^2)
+
+    1 - sum((tvdoctor$life - predict(model_poly2)^(1/2))^2) / SST
+    1 - sum((tvdoctor$life - exp(predict(model_log)))^2) / SST
+    ```
 
 ## Excercise 3 (The `cars` Data Set) [20 points]
 
@@ -270,6 +334,14 @@ we will use `dist` as the response and `speed` as the predictor.
     bptest(model)
     ```
 
+    With a test statistic of .945 and p-value of 0.02152, we do reject
+    the null hypothesis and conclude the errors have a normal
+    distribution based on the Shapiro-Wilk test.
+
+    With a test statistic of 3.215 and a p-value of .07297, we do not
+    reject the null hypothesis, and conclude the constant variance
+    assumption is not violated based on the Breusch-Pagan test.
+
 2.  (10 points) Use the Box-Cox method to verify that
     $\sqrt{\texttt{dist}}$ is a "recommended" transformation of the
     *response* variable. That is, verify that the square-root
@@ -282,7 +354,11 @@ we will use `dist` as the response and `speed` as the predictor.
 
     ```{r}
     bc = boxcox(model, plotit = TRUE)
+    bc$x[which.max(bc$y)]
     ```
+
+    $\hat{\lambda}$ = .4242, which suggests a square root transformation
+    would be appropriate.
 
 3.  (5 points) Fit the model justified in Question 2. That is, fit a
     model with $\sqrt{\texttt{dist}}$ as the response and
@@ -297,3 +373,11 @@ we will use `dist` as the response and `speed` as the predictor.
     shapiro.test(resid(model))
     bptest(model)
     ```
+
+    With a test statistic of .973 and p-value of 0.3143, we do reject
+    the null hypothesis and conclude the errors have a normal
+    distribution based on the Shapiro-Wilk test.
+
+    With a test statistic of .0111 and a p-value of .9157, we do not
+    reject the null hypothesis, and conclude the constant variance
+    assumption is not violated based on the Breusch-Pagan test.
