@@ -163,7 +163,7 @@ In the following exercise, we will use `brain` as the response and
     ```{r}
     sqrt(mean((mammals$brain - predict(model))^2))
 
-    sqrt(mean((mammals$brain - predict(model_log))^2))
+    sqrt(mean((mammals$brain - exp(predict(model_log)))^2))
     ```
 
 ## Exercise 2 (TV and Health) [40 points]
