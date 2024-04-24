@@ -2,6 +2,7 @@
 title: 'STA 5207: Homework 9'
 date: 'Due: Friday, April 5th by 11:59 PM'
 output:
+  pdf_document: default
   html_document:
     df_print: paged
 editor_options:
@@ -163,8 +164,10 @@ In the following exercise, we will use `brain` as the response and
     ```{r}
     sqrt(mean((mammals$brain - predict(model))^2))
 
-    sqrt(mean((mammals$brain - predict(model_log))^2))
+    sqrt(mean((mammals$brain - exp(predict(model_log)))^2))
     ```
+
+I prefer the log transformed model as it has a lower RMSE.
 
 ## Exercise 2 (TV and Health) [40 points]
 
@@ -315,6 +318,8 @@ as the predictor.
     1 - sum((tvdoctor$life - predict(model_poly2)^(1/2))^2) / SST
     1 - sum((tvdoctor$life - exp(predict(model_log)))^2) / SST
     ```
+
+I prefer the log transformed model as it has a much higher $R^2$ value.
 
 ## Excercise 3 (The `cars` Data Set) [20 points]
 

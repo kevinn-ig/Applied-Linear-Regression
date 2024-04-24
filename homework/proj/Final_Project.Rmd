@@ -1,0 +1,127 @@
+---
+title: "Final Project"
+author: "Hunter Garrison, Kevin Smith, Reese Madsen, Giulio Martini"
+date: "2024-04-26"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Section 1: Introduction
+
+In this project, we are working with a dataset observing the prices of houses and corresponding attributes of each house in India. Below are the attributes of each house recorded in the dataset:
+
+| Attribute               | Description                                     | Data Type |
+|------------------|------------------------------------|------------------|
+| [**price**]{.underline} | Price of the houses in rupees.                  | Integer   |
+| area                    | Area of a house in square feet                  | Integer   |
+| bedrooms                | Number of bedrooms in house                     | Integer   |
+| bathrooms               | Number of bathrooms in house                    | Integer   |
+| stories                 | Number of stories in house                      | Integer   |
+| mainroad                | Whether or not house is connected to main road  | Boolean   |
+| guestroom               | Whether or not house has a guest room           | Boolean   |
+| basement                | Whether or not house has a basement             | Boolean   |
+| hotwaterheating         | Whether or not house has a hot-water heater     | Boolean   |
+| airconditioning         | Whether or not house has air conditioning       | Boolean   |
+| parking                 | Number of parking spots at house                | Integer   |
+| prefarea                | Whether or not the house is in a preferred area | Boolean   |
+| furnishingstatus        | Furnishing status of the house                  | String    |
+
+Below is the first 5 lines of our dataset:
+
+```{r, echo=FALSE}
+data <- read.csv('Housing.csv')
+head(data, 5)
+#colSums(is.na(data))
+#hist(data$price, xlab="Price of House", ylab="Frequency", col="purple")
+```
+
+We are attempting to create a linear regression model that best explains the variance in the price of the houses using the predictors in our dataset. In this report, we will explore our data by finding collinearity, outliers, influential points, and by checking error assumption violations. We will also discover which variables are the most important by using model selection, and test OLS as well as GLS and WLS regressions.
+
+# Section 2: Regression Analysis
+
+## Model Diagnostics
+
+In order to remove problematic data points from the data set, we must perform a series of test to identify them. To begin, we will examine our error assumptions to see if any have been violated using graphical methods.
+
+#### Constant Variance Assumption
+
+```{r, echo=FALSE}
+library(olsrr)
+model = lm(price = ., data = data)
+ols_plot_resid_fit(model)
+```
+
+Examining the residual vs fitted values plot above, it is apparent that the variance is not constant, the residuals are increasing as the fitted values are increasing.
+
+#### Normality Assumption
+
+In order to check the normality assumption, we will be examining the Q-Q plot:
+
+```{r, echo=FALSE, message = FALSE, warning = FALSE}
+library(MASS)
+ols_plot_resid_qq(model)
+bc = boxcox(model, lambda = seq(-0.25, 0.75, by = 0.05), plotit = TRUE)
+bc$x[which.max(bc$y)]
+
+model_bc = lm(price ^ 0.05 ~ . , data = data)
+ols_plot_resid_qq(model_bc)
+ols_plot_resid_fit(model)
+
+
+
+# RMSE of the model using the response  Species^0.3 
+sqrt(mean((data$price - predict(model))^2))
+
+# RMSE of the model using the response  Species^0.3 
+sqrt(mean((data$price - predict(model_bc)^(1/0.05))^2))
+
+# sum of square totals for species
+SST = sum((data$price - mean(data$price))^2)
+
+# percent of variation in species explained by the model in Question 1
+1 - sum((data$price - predict(model))^2) / SST
+
+1 - sum((data$price - predict(model))^2) / SST
+
+# percent of variation in species explained by the model in Question 3
+1 - sum((data$price - predict(model_bc)^(1/0.05))^2) / SST
+```
+
+Once again, we can see that the normality assumption is violated, there is a significant tail on the right hand side of the plot.
+
+#### Linearity Assumption
+
+```{r, echo=FALSE, message = FALSE}
+ols_plot_added_variable(model)
+```
+
+#### Highly Influential Points
+
+```{r, echo=FALSE}
+length(which(cooks.distance(model) > 4 / length(cooks.distance(model))))
+```
+
+```{r}
+noninfluential_ids = which(
+    cooks.distance(model) <= 4/ length(cooks.distance(model)))
+
+model_fix = lm(price ~ ., 
+               data = data,
+               subset = noninfluential_ids)
+
+ols_plot_resid_qq(model_fix)
+```
+
+Model diagnostics (error assumptions/outliers/influential points): Kevin
+
+Variable Selection (forward/backward/step/AIC/BIC/RMSE_LOOCV): Hunter
+
+Collinearity/GLS/WLS: Reese
+
+Categorical Predictors (Interacitve/additive models): Guilio
