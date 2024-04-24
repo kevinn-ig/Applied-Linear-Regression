@@ -1,0 +1,435 @@
+---
+title: 'STA 5207: Homework 11'
+date: 'Due: Friday, April 19 by 11:59 PM'
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Include your R code in an R chunks as part of your answer. In addition, your written answer to each exercise should be self-contained so that the grader can determine your solution without reading your code or deciphering its output.
+
+```{r}
+library(ISLR2)
+library(lmridge)
+library(glmnet)
+```
+
+## Exercise 1 (Boston Housing) [50 points]
+
+For this exercise, we will analyze a data set containing housing values in 506 suburbs of Boston. The data set was split into a training and testing data set. Note that this data set is a version of the `Boston` data set from the `ISLR2` package, so you can type `?ISLR2::Boston` in `R` to read about the data set and the meaning of the variables. The training data set contains 354 suburbs and 13 variables. In the following exercises, use `log(medv)` (the logarithm of the median value of owner-occupied homes in \$1000s) as the response and the other variables as predictors. You should use the `boston_train.csv` data set unless otherwise specified.
+
+```{r}
+data = read.csv("boston_train.csv")
+```
+
+1.  (10 points) Perform ridge regression with `log(medv)` as the response and the other variables as predictors using the data in `boston_train.csv`. Choose an appropriate value of $\lambda$ using GCV. Justify the range of $\lambda$ values you searched over and report your final choice of $\lambda$. Include any necessary plots in your response.
+
+    ```{r}
+    grid = 10 ^ seq(10, -2 , length = 100)
+
+    mod_ridge = lmridge(log(medv) ~ ., data = data, 
+                        scaling = 'scaled', 
+                        K = grid)
+
+    k_est = kest(mod_ridge)
+
+    print(k_est$kGCV)
+
+    plot(log10(mod_ridge$K), k_est$GCV, type = 'l', lwd = 2,
+         xlab = expression(log[10](lambda)), ylab = 'GCV')
+
+    points(log10(mod_ridge$K), k_est$GCV, 
+           pch = 19, col = 'steelblue', cex = 0.75)
+
+    abline(v=log10(k_est$kGCV), lty = 'dashed', col = 'grey',
+           lwd = 2)
+
+    grid = 10 ^ seq(0, 1 , length = 100)
+
+    mod_ridge = lmridge(log(medv) ~ ., data = data, 
+                        scaling = 'scaled', 
+                        K = grid)
+
+    plot(log10(mod_ridge$K), k_est$GCV, type = 'l', lwd = 2,
+         xlab = expression(log[10](lambda)), ylab = 'GCV')
+
+    points(log10(mod_ridge$K), k_est$GCV, 
+           pch = 19, col = 'steelblue', cex = 0.75)
+
+    abline(v=log10(k_est$kGCV), lty = 'dashed', col = 'grey',
+           lwd = 2)
+
+    k_est = kest(mod_ridge)
+
+    print(k_est$kGCV)
+    ```
+
+    $\lambda$ = 2.365 occurs in the interior of the plot which verifies that this is an appropriate choice of $\lambda$. It correlates roughly to .4 on the x axis of the plot.
+
+2.  (6 points) Report the estimated regression equation and $R^2$ value for the ridge regression model you chose in Question 1.
+
+    ```{r}
+    # best lambda value chosen by GCV
+    k_best = kest(mod_ridge)$kGCV
+
+    # re-fit the model using the best value of lambda according to GCV
+    mod_ridge_best = lmridge(log(medv) ~ ., data = data, 
+                        scaling = 'scaled', 
+                        K = k_best)
+    summary(mod_ridge_best)
+    ```
+
+    $$
+    \text{log(medv)}_i = 4.5 - .011\text{crim}_i + .0009\text{zn}_i + .0006\text{indus}_i + .0813\text{chas}_i - .853\text{nox}_i + .0818\text{rm}_i -.0004\text{age}_i - .0576\text{dis}_i + .0154\text{rad}_i - .0006\text{tax}_i - .0401\text{ptratio}_i - .0285\text{lstat}_i
+    $$
+
+    $R^2 = .75920$
+
+3.  (10 points) Perform lasso with `log(medv)` as the response and the other variables as predictors using the data in `boston_train.csv`. You should set a random seed of 42. Justify the range of $\lambda$ values you searched over and report your chosen values of `lambda.min` and `lambda.1se`. Include any necessary plots in your response.
+
+    ```{r}
+    set.seed(42)
+
+    x_train = model.matrix(log(medv) ~ ., data = data)[, -1]
+
+    y_train = log(data$medv)
+
+    mod_lasso = cv.glmnet(x_train, y_train)
+
+    plot(mod_lasso)
+
+    grid = exp(seq(-8, -4, length=100))
+
+    mod_lasso = cv.glmnet(x_train, y_train, lambda = grid)
+
+    plot(mod_lasso)
+
+    # lambda.min
+    mod_lasso$lambda.min
+
+    # lambda.1se
+    mod_lasso$lambda.1se
+    ```
+
+    The range we chose is adequate as both lambda.min and lambda.1se occur in the interior of the plot. Specifically, lambda.min = .00122 and lambda.1se = .0104
+
+4.  (4 points) Report the plot of the solution path for the lasso coefficient estimates.
+
+    ```{r}
+    # solution path plot
+    plot(mod_lasso$glmnet.fit, xvar = 'lambda', label = TRUE)
+
+    # include a legend of the variable names
+    pred_names = colnames(x_train)
+    legend('bottomright', 
+           legend = paste(1:length(pred_names), pred_names), 
+           cex= 0.7)
+    ```
+
+    As $\lambda$ increases, the number of zero coefficients increases
+
+    We also see that the coefficient for nox decreases drastically as lambda increases.
+
+5.  (6 points) Report the number of variables with non-zero coefficients and the estimated regression equation for the lasso model estimated using `lambda.min`.
+
+    ```{r}
+    coef(mod_lasso, s = 'lambda.min')
+    ```
+
+    There are twelve non-zero variables.
+
+    $$
+    \text{log(medv)}_i = 4.4 - .011\text{crim}_i + .0008\text{zn}_i + .0787\text{chas}_i - .826\text{nox}_i + .0802\text{rm}_i -.0002\text{age}_i - .0551\text{dis}_i + .0144\text{rad}_i - .0005\text{tax}_i - .0398\text{ptratio}_i - .0289\text{lstat}_i
+    $$
+
+6.  (6 points) Report the number of variables with non-zero coefficients and the estimated regression equation for the lasso model estimated using `lambda.1se`.
+
+    ```{r}
+    coef(mod_lasso, s = 'lambda.1se')
+    ```
+
+    There are 9 non-zero variables.
+
+    $$
+    \text{log(medv)}_i = 3.756 - .0082\text{crim}_i +  .0627\text{chas}_i - .424\text{nox}_i + .0943\text{rm}_i - .0253\text{dis}_i + .0004\text{rad}_i - .0317\text{ptratio}_i - .0294\text{lstat}_i
+    $$
+
+7.  (8 points) The file `boston_test.csv` on Canvas contains a new test data set of 152 houses not found in `boston_train.csv`. Calculate the RMSE values on this test data (`boston_test.csv`) for the following four models:
+
+    -   **Model 1**: The ridge regression model you chose in Question 1,
+    -   **Model 2**: The lasso model using `lambda.min` you reported in Question 5.
+    -   **Model 3**: The lasso model using `lambda.1se` you reported in Question 6.
+    -   **Model 4**: An OLS regression model estimated with `log(medv)` as the response and the other variables as predictors.
+
+    The RMSE should be calculated using the logarithm of the response, that is, $$
+    \mathsf{RMSE} = \sqrt{\frac{1}{n} \sum_{i=1}^n \left[\log(\texttt{medv}_i) - \hat{y}_i\right]^2}.
+    $$
+
+    Based on these test RMSE values, which model do you prefer?
+
+    ```{r}
+    test_data = read.csv("boston_test.csv")
+    # quick function to calculate RMSE
+    rmse = function(y_true, y_pred) {
+        sqrt(mean((y_true - y_pred)^2))
+    }
+
+    x_test = model.matrix(log(medv) ~ ., data = test_data)[, -1]
+    y_test = log(test_data$medv)
+
+    # Model 1: ridge
+
+    # predict on the new test data. This is the same as lm
+    y_pred = predict(mod_ridge_best, newdata = test_data)
+
+    # calculate the RMSE
+    rmse(y_test, y_pred)
+
+    # Model 2: lasso with lambda.min
+
+    # predictions using lambda.min
+    y_pred = predict(mod_lasso, newx = x_test, s = 'lambda.min')
+
+    # calculate the RMSE
+    rmse(y_test, y_pred)
+
+    # Model 3: lasso with lambda.1se
+
+    # predictions using lambda.1se
+    y_pred = predict(mod_lasso, newx = x_test, s = 'lambda.1se')
+
+    # calculate the RMSE
+    rmse(y_test, y_pred)
+
+    # Model 4: OLS
+
+    # fit OLS model on the training data
+    mod_ols = lm(log(medv) ~ ., data = data)
+
+    # OLS predictions on the test data
+    y_pred = predict(mod_ols, test_data)
+
+    # calculate the RMSE
+    rmse(y_test, y_pred)
+    ```
+
+I would choose Model 2: lasso with lambda.min as it has the lowest RMSE of the four models.
+
+## Exercise 2 (The `college` Data Set) [50 points]
+
+This exercise will analyze statistics for a number of U.S. Colleges from the 1995 issue of the *US News and World Report*. The data set was split into a training and testing data set. The training data set can be found in `college_train.csv` on Canvas. Note that this data set is a version of the `College` data set from the `ISLR2` package. The training data set contains 388 universities and the following 18 variables:
+
+-   `Private`: A binary variable with 0 and 1 indicating a public or private university.
+-   `Apps`: Number of applications received.
+-   `Accept`: Number of applications accepted.
+-   `Enroll`: Number of new students enrolled.
+-   `Top10perc`: Percentage of new students who ranked in the top 10% of their high-school class.
+-   `Top25perc`: Percentage of new students who ranked in the top 25% of their high-school class.
+-   `F.Undergrad`: Number of fulltime undergraduates.
+-   `P.Undergrad`: Number of parttime undergraduates.
+-   `Room.Board`: Room and board costs.
+-   `Books`: Estimated book costs.
+-   `Personal`: Estimated personal spending.
+-   `PhD`: Pct. of faculty with Ph.D.'s.
+-   `Terminal`: Pct. of faculty with terminal degree.
+-   `S.F.Ratio`: Student/faculty ratio.
+-   `perc.alumni`: Pct. alumni who donate.
+-   `Expend`: Instructional expenditure per student.
+-   `Grad.Rate`: Graduation rate.
+
+In the following exercise, we will use `Apps` as the response and the remaining variables as predictors. You should use the `college_train.csv` data set unless otherwise specified.
+
+**Important**: The first column of `college_train.csv` and `college_test.csv` contains the row names, i.e., the college names. To properly load this data set into `R` using `read.csv`, you must set the argument `row.names = 1`, i.e., `college_train = read.csv('college_train.csv', row.names = 1)`.
+
+```{r}
+data = college_train = read.csv('college_train.csv', row.names = 1)
+```
+
+1.  (10 points) Perform ridge regression with `Apps` as the response and the other variables as predictors using the data in `college_train.csv`. Choose an appropriate value of $\lambda$ using GCV. Justify the range of $\lambda$ values you searched over and report your final choice of $\lambda$. Include any necessary plots in your response.
+
+    ```{r}
+    grid = 10 ^ seq(10, -2 , length = 100)
+
+    mod_ridge = lmridge(Apps ~ ., data = data, 
+                        scaling = 'scaled', 
+                        K = grid)
+
+    k_est = kest(mod_ridge)
+
+    print(k_est$kGCV)
+
+    plot(log10(mod_ridge$K), k_est$GCV, type = 'l', lwd = 2,
+         xlab = expression(log[10](lambda)), ylab = 'GCV')
+
+    points(log10(mod_ridge$K), k_est$GCV, 
+           pch = 19, col = 'steelblue', cex = 0.75)
+
+    abline(v=log10(k_est$kGCV), lty = 'dashed', col = 'grey',
+           lwd = 2)
+
+    # lambda values evenly spaced on the log-scale from 10^1 to 10^2.5.
+    grid = 10 ^ seq(-1, 0 , length = 100)
+
+    mod_ridge = lmridge(Apps ~ ., data = data, 
+                        scaling = 'scaled', 
+                        K = grid)
+
+    # extract the GCV errors and lambda that minimizes the GCV error
+    k_est = kest(mod_ridge)
+
+    # a plot of GCV vs. log10(lambda) 
+    plot(log10(mod_ridge$K), k_est$GCV, type = 'l', lwd = 2,
+         xlab = expression(log[10](lambda)), ylab = 'GCV')
+
+    points(log10(mod_ridge$K), k_est$GCV, 
+           pch = 19, col = 'steelblue', cex = 0.75)
+
+    # horizontal line at log10(kGCV), i.e.,
+    # the base 10 logarithm of the best lambda value
+    abline(v=log10(k_est$kGCV), lty = 'dashed', col = 'grey',
+           lwd = 2)
+
+    print(k_est$kGCV)
+    ```
+
+    $\lambda$ = 0.313 occurs in the interior of the plot which verifies that this is an appropriate choice of $\lambda$. It correlates roughly to -.5 on the x axis of the plot.
+
+2.  (6 points) Report the $R^2$ value for the ridge regression model you chose in Question 1.
+
+    ```{r}
+    # best lambda value chosen by GCV
+    k_best = kest(mod_ridge)$kGCV
+
+    # re-fit the model using the best value of lambda according to GCV
+    mod_ridge_best = lmridge(Apps ~ ., data = data, 
+                        scaling = 'scaled', 
+                        K = k_best)
+
+    summary(mod_ridge_best)
+    ```
+
+    $R^2$ for the ridge regression model is .941
+
+3.  (10 points) Perform lasso with `Apps` as the response and the other variables as predictors using the data in `college_train.csv`. You should set a random seed of 42. Justify the range of $\lambda$ values you searched over and report your chosen values of `lambda.min` and `lambda.1se`. Include any necessary plots in your response.
+
+    ```{r}
+    set.seed(42)
+
+    x_train = model.matrix(Apps ~ ., data = data)[, -1]
+
+    y_train = data$Apps
+
+    mod_lasso = cv.glmnet(x_train, y_train)
+
+    plot(mod_lasso)
+
+    grid = exp(seq(4.5, 7, length=100))
+
+    mod_lasso = cv.glmnet(x_train, y_train, lambda = grid)
+
+    plot(mod_lasso)
+
+    # lambda.min
+    mod_lasso$lambda.min
+
+    # lambda.1se
+    mod_lasso$lambda.1se
+
+    ```
+
+    The range we chose is adequate as both lambda.min and lambda.1se occur in the interior of the plot. Specifically, lambda.min = 92.32 and lambda.1se = 678.7
+
+4.  (4 points) Report the plot of the solution path for the lasso coefficient estimates.
+
+    ```{r}
+    # solution path plot
+    plot(mod_lasso$glmnet.fit, xvar = 'lambda', label = TRUE)
+
+    # include a legend of the variable names
+    pred_names = colnames(x_train)
+    legend('bottomright', 
+           legend = paste(1:length(pred_names), pred_names), 
+           cex= 0.7)
+    ```
+
+    As $\lambda$ increases, the number of zero coefficients increases
+
+    We also see that the coefficient for Private decreases drastically as lambda increases.
+
+5.  (6 points) Report the number of variables with non-zero coefficients for the lasso model estimated using `lambda.min`.
+
+    ```{r}
+    coef(mod_lasso, s = 'lambda.min')
+    ```
+
+    There are six non-zero coefficients of the lasso model with lambda.min.
+
+6.  (6 points) Report the number of variables with non-zero coefficients **and** the estimated regression equation for the lasso model estimated using `lambda.1se`.
+
+    ```{r}
+    coef(mod_lasso, s = 'lambda.1se')
+    ```
+
+    There is only one non-zero coefficient in the lasso model with lambda.1se.
+
+$$
+\text{Apps}_i = 492.6 + 1.25\text{Accept}_i
+$$
+
+1.  (8 points) The file `college_test.csv` on Canvas contains a new test data set of 389 colleges not found in `college_train.csv`. Calculate the RMSE values on this test data (`college_test.csv`) for the following models:
+
+    -   **Model 1**: The ridge regression model you chose in Question 1,
+    -   **Model 2**: The lasso model using `lambda.min` you reported in Question 5.
+    -   **Model 3**: The lasso model using `lambda.1se` you reported in Question 6.
+    -   **Model 4**: An OLS regression model estimated with `Apps` as the response and the other variables as predictors.
+
+    Based on these test RMSE values, which model do you prefer?
+
+    ```{r}
+    test_data = read.csv('college_test.csv', row.names = 1)
+
+    x_test = model.matrix(Apps ~ ., data = test_data)[, -1]
+    y_test = test_data$Apps
+
+    # Model 1: ridge
+
+    # predict on the new test data. This is the same as lm
+    y_pred = predict(mod_ridge_best, newdata = test_data)
+
+    # calculate the RMSE
+    rmse(y_test, y_pred)
+
+    # Model 2: lasso with lambda.min
+
+    # predictions using lambda.min
+    y_pred = predict(mod_lasso, newx = x_test, s = 'lambda.min')
+
+    # calculate the RMSE
+    rmse(y_test, y_pred)
+
+    # Model 3: lasso with lambda.1se
+
+    # predictions using lambda.1se
+    y_pred = predict(mod_lasso, newx = x_test, s = 'lambda.1se')
+
+    # calculate the RMSE
+    rmse(y_test, y_pred)
+
+    # Model 4: OLS
+
+    # fit OLS model on the training data
+    mod_ols = lm(Apps ~ ., data = data)
+
+    # OLS predictions on the test data
+    y_pred = predict(mod_ols, test_data)
+
+    # calculate the RMSE
+    rmse(y_test, y_pred)
+    ```
+
+I would choose Model 1: ridge regression model as it has the lowest RMSE of the four models.
